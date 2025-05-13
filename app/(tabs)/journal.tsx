@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Card } from '@/components/Card';
 import { Input } from '@/components/Input';
@@ -8,11 +8,23 @@ import { calculateHourlyRate } from '@/utils/calculations';
 export default function JournalScreen() {
   const { hourlyRateParams, updateHourlyRateParams } = useAppContext();
   
-  const [bb_amount, setBbAmount] = useState('');
-  const [bb_per_hour, setBbPerHour] = useState('');
-  const [rakeback_hourly, setRakebackHourly] = useState('');
-  const [monthly_hours, setMonthlyHours] = useState('');
-  const [monthly_expenses, setMonthlyExpenses] = useState('');
+  const [bb_amount, setBbAmount] = useState(hourlyRateParams.bb_amount.toString());
+  const [bb_per_hour, setBbPerHour] = useState(hourlyRateParams.bb_per_hour.toString());
+  const [rakeback_hourly, setRakebackHourly] = useState(hourlyRateParams.rakeback_hourly.toString());
+  const [monthly_hours, setMonthlyHours] = useState(hourlyRateParams.monthly_hours.toString());
+  const [monthly_expenses, setMonthlyExpenses] = useState(hourlyRateParams.monthly_expenses.toString());
+  
+  useEffect(() => {
+    setBbAmount(hourlyRateParams.bb_amount.toString());
+    setBbPerHour(hourlyRateParams.bb_per_hour.toString());
+    setRakebackHourly(hourlyRateParams.rakeback_hourly.toString());
+    setMonthlyHours(hourlyRateParams.monthly_hours.toString());
+    setMonthlyExpenses(hourlyRateParams.monthly_expenses.toString());
+  }, [hourlyRateParams]);
+
+  const handleParamUpdate = (params: typeof hourlyRateParams) => {
+    updateHourlyRateParams(params);
+  };
   
   const hourlyRate = calculateHourlyRate(
     Number(bb_amount) || 0,
@@ -26,7 +38,7 @@ export default function JournalScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
-        <Text style={styles.title}>Calculateur</Text>
+        <Text style={styles.title}>Simulateur</Text>
       </View>
       
       <Card>
@@ -37,7 +49,7 @@ export default function JournalScreen() {
           value={bb_amount}
           onChangeText={(text) => {
             setBbAmount(text);
-            updateHourlyRateParams({
+            handleParamUpdate({
               ...hourlyRateParams,
               bb_amount: Number(text) || 0,
             });
@@ -51,7 +63,7 @@ export default function JournalScreen() {
           value={bb_per_hour}
           onChangeText={(text) => {
             setBbPerHour(text);
-            updateHourlyRateParams({
+            handleParamUpdate({
               ...hourlyRateParams,
               bb_per_hour: Number(text) || 0,
             });
@@ -65,7 +77,7 @@ export default function JournalScreen() {
           value={rakeback_hourly}
           onChangeText={(text) => {
             setRakebackHourly(text);
-            updateHourlyRateParams({
+            handleParamUpdate({
               ...hourlyRateParams,
               rakeback_hourly: Number(text) || 0,
             });
@@ -79,7 +91,7 @@ export default function JournalScreen() {
           value={monthly_hours}
           onChangeText={(text) => {
             setMonthlyHours(text);
-            updateHourlyRateParams({
+            handleParamUpdate({
               ...hourlyRateParams,
               monthly_hours: Number(text) || 0,
             });
@@ -93,7 +105,7 @@ export default function JournalScreen() {
           value={monthly_expenses}
           onChangeText={(text) => {
             setMonthlyExpenses(text);
-            updateHourlyRateParams({
+            handleParamUpdate({
               ...hourlyRateParams,
               monthly_expenses: Number(text) || 0,
             });
