@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Chrome as Home, ChartBar as BarChart3, Calculator } from 'lucide-react-native';
+import { LayoutDashboard, ChartBar, Calculator } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -39,14 +39,14 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+          tabBarIcon: ({ color }) => <LayoutDashboard size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="bankroll"
         options={{
           title: 'Bankroll',
-          tabBarIcon: ({ color }) => <BarChart3 size={24} color={color} />,
+          tabBarIcon: ({ color }) => <ChartBar size={24} color={color} />,
         }}
       />
       <Tabs.Screen
