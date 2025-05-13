@@ -110,10 +110,25 @@ export const BankrollChart: React.FC<BankrollChartProps> = ({ data }) => {
                 strokeWidth: '2',
                 stroke: '#3B82F6',
               },
+              count: 5,
+              stepSize: 1000,
+              yAxisInterval: 1000,
+              formatYLabel: (value) => {
+                const num = parseInt(value);
+                if (num >= 1000000) {
+                  return `${(num / 1000000).toFixed(0)}M`;
+                }
+                if (num >= 1000) {
+                  return `${(num / 1000).toFixed(0)}k`;
+                }
+                return num.toString();
+              }
             }}
             bezier
             style={styles.chart}
             onDataPointClick={handleDataPointClick}
+            yAxisInterval={1000}
+            segments={5}
           />
 
           {selectedPoint && (
