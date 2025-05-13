@@ -57,7 +57,7 @@ export default function BankrollScreen() {
   }
 
   const formatAmount = (amount: number) => {
-    return showAmounts ? amount.toLocaleString('fr-FR') : '••••••';
+    return showAmounts ? amount.toLocaleString('fr-FR') : '*****';
   };
 
   const subtotals = {

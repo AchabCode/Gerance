@@ -26,7 +26,7 @@ export default function HomeScreen() {
   };
 
   const formatBankroll = (amount: number) => {
-    return showBankroll ? amount.toLocaleString('fr-FR') : '••••••';
+    return showBankroll ? amount.toLocaleString('fr-FR') : '*****';
   };
 
   return (
