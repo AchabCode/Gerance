@@ -27,20 +27,9 @@ export interface HourlyRateParams {
   monthly_expenses: number;
 }
 
-export interface SimulatorConfig {
-  id: string;
-  name: string;
-  bb_amount: number;
-  bb_per_hour: number;
-  rakeback_hourly: number;
-  monthly_hours: number;
-  monthly_expenses: number;
-}
-
 export interface AppState {
   bankrollItems: BankrollItem[];
   bankrollHistory: BankrollHistory[];
   journalEntries: JournalEntry[];
   hourlyRateParams: HourlyRateParams;
-  simulatorConfigs: SimulatorConfig[];
 }

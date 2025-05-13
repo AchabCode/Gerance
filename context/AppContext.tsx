@@ -12,7 +12,6 @@ import {
   HourlyRateParams,
   AppState,
   BankrollHistory,
-  SimulatorConfig,
 } from '../types'
 import {
   loadAllData,
@@ -23,8 +22,6 @@ import {
   deleteJournalEntry as deleteJE,
   saveHourlyRateParams,
   addBankrollHistoryPoint,
-  saveSimulatorConfig,
-  deleteSimulatorConfig as deleteSC,
 } from '../utils/data'
 import { calculateTotalBankroll } from '../utils/calculations'
 import { useAuth } from './AuthContext'
@@ -41,8 +38,6 @@ interface AppContextType extends AppState {
   deleteJournalEntry: (id: string) => Promise<void>
   updateHourlyRateParams: (params: HourlyRateParams) => Promise<void>
   addHistoryPoint: (amount: number, date?: string) => Promise<void>
-  saveConfig: (config: Omit<SimulatorConfig, 'id'>) => Promise<void>
-  deleteSimulatorConfig: (id: string) => Promise<void>
   loading: boolean
   error: string | null
 }
@@ -58,7 +53,6 @@ const defaultState: AppState = {
     monthly_hours: 0,
     monthly_expenses: 0,
   },
-  simulatorConfigs: [],
 }
 
 const AppContext = createContext<AppContextType>({
@@ -70,8 +64,6 @@ const AppContext = createContext<AppContextType>({
   deleteJournalEntry: async () => {},
   updateHourlyRateParams: async () => {},
   addHistoryPoint: async () => {},
-  saveConfig: async () => {},
-  deleteSimulatorConfig: async () => {},
   loading: true,
   error: null,
 })
@@ -83,6 +75,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  /* ---------------------------------------------------------------------- */
+  /* Recharge à chaque changement d’utilisateur                             */
+  /* ---------------------------------------------------------------------- */
   useEffect(() => {
     ;(async () => {
       setLoading(true)
@@ -101,6 +96,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     })()
   }, [user?.id])
+
+  /* ---------------------------------------------------------------------- */
+  /* Mutations                                                              */
+  /* ---------------------------------------------------------------------- */
 
   const addHistoryPoint = async (amount: number, date?: string) => {
     const point = await addBankrollHistoryPoint({
@@ -167,22 +166,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setState(prev => ({ ...prev, hourlyRateParams: saved }))
   }
 
-  const saveConfig = async (config: Omit<SimulatorConfig, 'id'>) => {
-    const saved = await saveSimulatorConfig(config)
-    setState(prev => ({
-      ...prev,
-      simulatorConfigs: [saved, ...prev.simulatorConfigs],
-    }))
-  }
-
-  const deleteSimulatorConfig = async (id: string) => {
-    await deleteSC(id)
-    setState(prev => ({
-      ...prev,
-      simulatorConfigs: prev.simulatorConfigs.filter(c => c.id !== id),
-    }))
-  }
-
   return (
       <AppContext.Provider
           value={{
@@ -194,8 +177,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             deleteJournalEntry,
             updateHourlyRateParams,
             addHistoryPoint,
-            saveConfig,
-            deleteSimulatorConfig,
             loading,
             error,
           }}

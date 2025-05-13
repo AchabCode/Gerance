@@ -4,8 +4,6 @@ import {
   BankrollHistory,
   JournalEntry,
   HourlyRateParams,
-  AppState,
-  SimulatorConfig,
 } from '@/types'
 
 const getUid = async () =>
@@ -13,6 +11,7 @@ const getUid = async () =>
 
 const handle = <T>(ctx: string, data: T | null, error: any): T => {
   if (error) {
+    // 401 lorsque non-connecté → on renvoie du vide plutôt que throw
     if (error.status === 401) return ([] as unknown) as T
     console.error(`Error in ${ctx}:`, error)
     throw error
@@ -50,6 +49,7 @@ export const loadBankrollItems = async (): Promise<BankrollItem[]> => {
   return handle('loadBankrollItems', data, error)
 }
 
+
 export const addBankrollHistoryPoint = async (
     point: Omit<BankrollHistory, 'id' | 'user_id' | 'created_at'>,
 ) => {
@@ -68,6 +68,7 @@ export const loadBankrollHistory = async (): Promise<BankrollHistory[]> => {
       .order('date', { ascending: true })
   return handle('loadBankrollHistory', data, error)
 }
+
 
 export const createJournalEntry = async (
     entry: Omit<JournalEntry, 'id' | 'created_at' | 'updated_at' | 'user_id'>,
@@ -117,41 +118,13 @@ export const loadHourlyRateParams = async (): Promise<HourlyRateParams> => {
   return handle('loadHourlyRateParams', data ?? emptyParams, error)
 }
 
-export const saveSimulatorConfig = async (config: Omit<SimulatorConfig, 'id'>) => {
-  const { data, error } = await supabase
-      .from('simulator_configs')
-      .insert(config)
-      .select()
-      .single()
-  return handle('saveSimulatorConfig', data, error) as SimulatorConfig
-}
-
-export const loadSimulatorConfigs = async (): Promise<SimulatorConfig[]> => {
-  const { data, error } = await supabase
-      .from('simulator_configs')
-      .select('*')
-      .order('created_at', { ascending: false })
-  return handle('loadSimulatorConfigs', data, error)
-}
-
-export const deleteSimulatorConfig = async (id: string) => {
-  const { error } = await supabase.from('simulator_configs').delete().eq('id', id)
-  if (error) throw error
-}
 
 export const loadAllData = async () => {
-  const [items, history, entries, params, configs] = await Promise.all([
+  const [items, history, entries, params] = await Promise.all([
     loadBankrollItems(),
     loadBankrollHistory(),
     loadJournalEntries(),
     loadHourlyRateParams(),
-    loadSimulatorConfigs(),
   ])
-  return { 
-    bankrollItems: items, 
-    bankrollHistory: history, 
-    journalEntries: entries, 
-    hourlyRateParams: params,
-    simulatorConfigs: configs,
-  }
+  return { bankrollItems: items, bankrollHistory: history, journalEntries: entries, hourlyRateParams: params }
 }
