@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router';
 import { LayoutDashboard, ChartBar, Calculator } from 'lucide-react-native';
-import { Image, StyleSheet, View } from 'react-native';
 
 export default function TabLayout() {
   return (
@@ -35,15 +34,6 @@ export default function TabLayout() {
           color: '#0f172a',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
         },
-        headerTitle: () => (
-          <View style={styles.headerTitleContainer}>
-            <Image
-              source={{ uri: '/logo.png' }}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
-        ),
       }}>
       <Tabs.Screen
         name="index"
@@ -69,15 +59,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  headerTitleContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: 120,
-    height: 30,
-  },
-});
