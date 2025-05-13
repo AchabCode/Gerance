@@ -42,6 +42,13 @@ export const BankrollChart: React.FC<BankrollChartProps> = ({ data }) => {
   };
 
   const filteredData = filterDataByTimeRange(timeRange);
+
+  // Calculate optimal Y-axis steps
+  const maxValue = Math.max(...filteredData.map(point => point.amount));
+  const magnitude = Math.pow(10, Math.floor(Math.log10(maxValue)));
+  const normalizedMax = Math.ceil(maxValue / magnitude) * magnitude;
+  const yAxisStep = normalizedMax / 5;
+
   const chartData = {
     labels: filteredData.map(point => formatDate(point.date)),
     datasets: [
@@ -52,11 +59,6 @@ export const BankrollChart: React.FC<BankrollChartProps> = ({ data }) => {
       },
     ],
   };
-
-  // Calculate max value for Y axis
-  const maxValue = Math.max(...filteredData.map(point => point.amount));
-  const yAxisMax = Math.ceil(maxValue / 1000) * 1000;
-  const yAxisStep = yAxisMax / 5;
 
   const handleDataPointClick = (data: { index: number }) => {
     setSelectedPoint(filteredData[data.index]);
@@ -120,10 +122,10 @@ export const BankrollChart: React.FC<BankrollChartProps> = ({ data }) => {
               formatYLabel: (value) => {
                 const num = parseInt(value);
                 if (num >= 1000000) {
-                  return `${Math.round(num / 1000000)}M`;
+                  return `${(num / 1000000).toFixed(1)}M`;
                 }
                 if (num >= 1000) {
-                  return `${Math.round(num / 1000)}k`;
+                  return `${(num / 1000).toFixed(0)}k`;
                 }
                 return num.toString();
               }
