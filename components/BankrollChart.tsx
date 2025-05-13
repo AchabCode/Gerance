@@ -53,14 +53,14 @@ export const BankrollChart: React.FC<BankrollChartProps> = ({ data }) => {
     ],
   };
 
+  // Calculate max value for Y axis
+  const maxValue = Math.max(...filteredData.map(point => point.amount));
+  const yAxisMax = Math.ceil(maxValue / 1000) * 1000;
+  const yAxisStep = yAxisMax / 5;
+
   const handleDataPointClick = (data: { index: number }) => {
     setSelectedPoint(filteredData[data.index]);
   };
-
-  // Calculate max value for Y axis
-  const maxValue = Math.max(...filteredData.map(point => point.amount));
-  const yAxisMax = Math.ceil(maxValue / 5000) * 5000;
-  const yAxisStep = yAxisMax / 5;
 
   return (
     <View style={styles.container}>
@@ -102,7 +102,7 @@ export const BankrollChart: React.FC<BankrollChartProps> = ({ data }) => {
             height={220}
             chartConfig={{
               backgroundColor: '#ffffff',
-              backgroundGradientFrom: '#f1f5f9',
+              backgroundGradientFrom: '#ffffff',
               backgroundGradientTo: '#ffffff',
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
