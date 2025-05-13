@@ -1,4 +1,3 @@
-// app/(tabs)/bankroll.tsx
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native'
 import { Card } from '@/components/Card'
@@ -71,7 +70,9 @@ export default function BankrollScreen() {
         <Card key={type} style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{getLabel(type)}</Text>
-            <Text style={styles.sectionTotal}>{subtotals[type].toLocaleString('fr-FR')} €</Text>
+            <Text style={[styles.sectionTotal, subtotals[type] >= 0 && styles.positiveTotal]}>
+              {subtotals[type].toLocaleString('fr-FR')} €
+            </Text>
           </View>
           {items.length === 0 ? (
               <Text style={styles.emptyText}>Aucun {getLabel(type).toLowerCase()} enregistré</Text>
@@ -83,7 +84,9 @@ export default function BankrollScreen() {
                         <Text style={styles.itemName}>{item.name}</Text>
                       </TouchableOpacity>
                       <View style={styles.itemActions}>
-                        <Text style={styles.itemAmount}>{item.amount.toLocaleString('fr-FR')} €</Text>
+                        <Text style={[styles.itemAmount, item.amount >= 0 && styles.positiveAmount]}>
+                          {item.amount.toLocaleString('fr-FR')} €
+                        </Text>
                         <Pressable hitSlop={10} style={styles.deleteButton} onPress={() => handleDeleteItem(item)}>
                           <Trash2 size={16} color="#ef4444" />
                         </Pressable>
@@ -102,7 +105,9 @@ export default function BankrollScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Détail Bankroll</Text>
           <Text style={styles.totalLabel}>
-            Total: <Text style={styles.totalValue}>{totalBankroll.toLocaleString('fr-FR')} €</Text>
+            Total: <Text style={[styles.totalValue, totalBankroll >= 0 && styles.positiveTotal]}>
+              {totalBankroll.toLocaleString('fr-FR')} €
+            </Text>
           </Text>
         </View>
         {selectedType ? <BankrollItemForm type={selectedType} item={editingItem || undefined} onClose={closeForm} /> : <>
@@ -122,6 +127,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '700', color: '#0f172a', marginBottom: 8 },
   totalLabel: { fontSize: 16, color: '#64748b' },
   totalValue: { fontSize: 18, fontWeight: '700', color: '#3B82F6' },
+  positiveTotal: { color: '#2b9553' },
   section: { marginBottom: 16 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   sectionTitle: { fontSize: 18, fontWeight: '600', color: '#0f172a' },
@@ -132,6 +138,7 @@ const styles = StyleSheet.create({
   itemName: { fontSize: 16, color: '#0f172a', flexShrink: 1 },
   itemActions: { flexDirection: 'row', alignItems: 'center' },
   itemAmount: { fontSize: 16, fontWeight: '500', color: '#0f172a', marginRight: 12 },
+  positiveAmount: { color: '#2b9553' },
   deleteButton: { padding: 4 },
   addButton: { marginTop: 8 },
   emptyText: { fontSize: 14, color: '#94a3b8', marginBottom: 12, fontStyle: 'italic' },

@@ -23,7 +23,9 @@ export default function HomeScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Card style={styles.bankrollCard}>
         <Text style={styles.cardLabel}>Ma Bankroll actuelle</Text>
-        <Text style={styles.bankrollValue}>{totalBankroll.toLocaleString('fr-FR')} €</Text>
+        <Text style={[styles.bankrollValue, totalBankroll >= 0 && styles.positiveValue]}>
+          {totalBankroll.toLocaleString('fr-FR')} €
+        </Text>
         <Button
           title="Gérer"
           onPress={() => router.push('/(tabs)/bankroll')}
@@ -64,6 +66,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0f172a',
     marginBottom: 24,
+  },
+  positiveValue: {
+    color: '#2b9553',
   },
   manageButton: {
     width: 200,
