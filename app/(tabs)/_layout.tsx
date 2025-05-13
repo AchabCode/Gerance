@@ -1,12 +1,10 @@
 import { Tabs } from 'expo-router';
 import { LayoutDashboard, ChartBar, Calculator } from 'lucide-react-native';
-import { Image, StyleSheet } from 'react-native';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
         tabBarActiveTintColor: '#3B82F6',
         tabBarInactiveTintColor: '#94a3b8',
         tabBarStyle: {
@@ -40,15 +38,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: '',
-          headerTitle: () => (
-            <Image
-              source={require('../../assets/images/icon.png')}
-              style={styles.headerLogo}
-            />
-          ),
+          title: 'Accueil',
           tabBarIcon: ({ color }) => <LayoutDashboard size={24} color={color} />,
-          tabBarLabel: 'Accueil'
         }}
       />
       <Tabs.Screen
@@ -68,11 +59,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  headerLogo: {
-    width: 32,
-    height: 32,
-    resizeMode: 'contain',
-  },
-});
