@@ -38,7 +38,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
+          title: 'Accueil',
           tabBarIcon: ({ color }) => <LayoutDashboard size={24} color={color} />,
         }}
       />
