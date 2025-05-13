@@ -97,7 +97,7 @@ export const BankrollChart: React.FC<BankrollChartProps> = ({ data }) => {
             height={220}
             chartConfig={{
               backgroundColor: '#ffffff',
-              backgroundGradientFrom: '#FFC0CB',
+              backgroundGradientFrom: '#f1f5f9',
               backgroundGradientTo: '#ffffff',
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
