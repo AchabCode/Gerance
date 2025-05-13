@@ -52,7 +52,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="journal"
         options={{
-          title: 'Calculateur',
+          title: 'Simulateur',
           tabBarIcon: ({ color }) => <Calculator size={24} color={color} />,
         }}
       />
