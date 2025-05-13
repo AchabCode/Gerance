@@ -6,12 +6,13 @@ import { BankrollItemForm } from '@/components/BankrollItemForm'
 import { useAppContext } from '@/context/AppContext'
 import { calculateTotalBankroll } from '@/utils/calculations'
 import { BankrollItem, BankrollItemType } from '@/types'
-import { Trash2 } from 'lucide-react-native'
+import { Trash2, Eye, EyeOff } from 'lucide-react-native'
 
 export default function BankrollScreen() {
   const { bankrollItems, deleteBankrollItem } = useAppContext()
   const [selectedType, setSelectedType] = useState<BankrollItemType | null>(null)
   const [editingItem, setEditingItem] = useState<BankrollItem | null>(null)
+  const [showAmounts, setShowAmounts] = useState(false)
 
   const groupedItems: Record<BankrollItemType, BankrollItem[]> = {
     cash: bankrollItems.filter(i => i.type === 'cash'),
@@ -55,6 +56,10 @@ export default function BankrollScreen() {
     }
   }
 
+  const formatAmount = (amount: number) => {
+    return showAmounts ? amount.toLocaleString('fr-FR') : '••••••';
+  };
+
   const subtotals = {
     cash: calculateTotalBankroll(groupedItems.cash),
     poker_site: calculateTotalBankroll(groupedItems.poker_site),
@@ -67,56 +72,75 @@ export default function BankrollScreen() {
   const renderItemList = (type: BankrollItemType) => {
     const items = groupedItems[type]
     return (
-        <Card key={type} style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{getLabel(type)}</Text>
-            <Text style={[styles.sectionTotal, subtotals[type] >= 0 && styles.positiveTotal]}>
-              {subtotals[type].toLocaleString('fr-FR')} €
-            </Text>
-          </View>
-          {items.length === 0 ? (
-              <Text style={styles.emptyText}>Aucun {getLabel(type).toLowerCase()} enregistré</Text>
-          ) : (
-              <View style={styles.itemsList}>
-                {items.map(item => (
-                    <View key={item.id} style={styles.item}>
-                      <TouchableOpacity style={styles.editZone} onPress={() => handleEditItem(item)}>
-                        <Text style={styles.itemName}>{item.name}</Text>
-                      </TouchableOpacity>
-                      <View style={styles.itemActions}>
-                        <Text style={[styles.itemAmount, item.amount >= 0 && styles.positiveAmount]}>
-                          {item.amount.toLocaleString('fr-FR')} €
-                        </Text>
-                        <Pressable hitSlop={10} style={styles.deleteButton} onPress={() => handleDeleteItem(item)}>
-                          <Trash2 size={16} color="#ef4444" />
-                        </Pressable>
-                      </View>
-                    </View>
-                ))}
+      <Card key={type} style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{getLabel(type)}</Text>
+          <Text style={[styles.sectionTotal, subtotals[type] >= 0 && styles.positiveTotal]}>
+            {formatAmount(subtotals[type])} €
+          </Text>
+        </View>
+        {items.length === 0 ? (
+          <Text style={styles.emptyText}>Aucun {getLabel(type).toLowerCase()} enregistré</Text>
+        ) : (
+          <View style={styles.itemsList}>
+            {items.map(item => (
+              <View key={item.id} style={styles.item}>
+                <TouchableOpacity style={styles.editZone} onPress={() => handleEditItem(item)}>
+                  <Text style={styles.itemName}>{item.name}</Text>
+                </TouchableOpacity>
+                <View style={styles.itemActions}>
+                  <Text style={[styles.itemAmount, item.amount >= 0 && styles.positiveAmount]}>
+                    {formatAmount(item.amount)} €
+                  </Text>
+                  <Pressable hitSlop={10} style={styles.deleteButton} onPress={() => handleDeleteItem(item)}>
+                    <Trash2 size={16} color="#ef4444" />
+                  </Pressable>
+                </View>
               </View>
-          )}
-          <Button title={`Ajouter ${getLabel(type).toLowerCase()}`} onPress={() => handleAddItem(type)} variant="secondary" size="small" style={styles.addButton} />
-        </Card>
+            ))}
+          </View>
+        )}
+        <Button 
+          title={`Ajouter ${getLabel(type).toLowerCase()}`} 
+          onPress={() => handleAddItem(type)} 
+          variant="secondary" 
+          size="small" 
+          style={styles.addButton} 
+        />
+      </Card>
     )
   }
 
   return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-        <View style={styles.header}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <View style={styles.header}>
+        <View style={styles.titleContainer}>
           <Text style={styles.title}>Détail Bankroll</Text>
-          <Text style={styles.totalLabel}>
-            Total: <Text style={[styles.totalValue, totalBankroll >= 0 && styles.positiveTotal]}>
-              {totalBankroll.toLocaleString('fr-FR')} €
-            </Text>
-          </Text>
+          <TouchableOpacity onPress={() => setShowAmounts(!showAmounts)} style={styles.eyeButton}>
+            {showAmounts ? (
+              <EyeOff size={24} color="#64748b" />
+            ) : (
+              <Eye size={24} color="#64748b" />
+            )}
+          </TouchableOpacity>
         </View>
-        {selectedType ? <BankrollItemForm type={selectedType} item={editingItem || undefined} onClose={closeForm} /> : <>
+        <Text style={styles.totalLabel}>
+          Total: <Text style={[styles.totalValue, totalBankroll >= 0 && styles.positiveTotal]}>
+            {formatAmount(totalBankroll)} €
+          </Text>
+        </Text>
+      </View>
+      {selectedType ? (
+        <BankrollItemForm type={selectedType} item={editingItem || undefined} onClose={closeForm} />
+      ) : (
+        <>
           {renderItemList('cash')}
           {renderItemList('poker_site')}
           {renderItemList('bank_account')}
           {renderItemList('crypto')}
-        </>}
-      </ScrollView>
+        </>
+      )}
+    </ScrollView>
   )
 }
 
@@ -124,7 +148,15 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   contentContainer: { padding: 16 },
   header: { marginTop: 16, marginBottom: 24 },
-  title: { fontSize: 24, fontWeight: '700', color: '#0f172a', marginBottom: 8 },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  title: { fontSize: 24, fontWeight: '700', color: '#0f172a', marginRight: 12 },
+  eyeButton: {
+    padding: 8,
+  },
   totalLabel: { fontSize: 16, color: '#64748b' },
   totalValue: { fontSize: 18, fontWeight: '700', color: '#3B82F6' },
   positiveTotal: { color: '#2b9553' },
