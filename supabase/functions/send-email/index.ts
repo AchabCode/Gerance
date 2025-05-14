@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'noreply@yourdomain.com',
+        from: 'noreply@gerance.resend.dev',
         to: email,
         subject: 'Modification de votre pseudo',
         html: `
