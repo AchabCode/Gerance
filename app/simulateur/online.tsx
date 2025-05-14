@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Card } from '@/components/Card';
 import { Input } from '@/components/Input';
 import { Select } from '@/components/Select';
@@ -49,14 +49,16 @@ export default function OnlineSimulatorScreen() {
 
   useEffect(() => {
     if (user) {
+      console.log('Loading simulator data for user:', user.id);
       loadSimulatorData();
     }
   }, [user?.id]);
 
   const loadSimulatorData = async () => {
-    if (!user) return;
-
-    console.log('Loading simulator data for user:', user.id);
+    if (!user) {
+      console.log('No user found, cannot load data');
+      return;
+    }
 
     try {
       setLoading(true);
@@ -68,6 +70,7 @@ export default function OnlineSimulatorScreen() {
 
       if (error) {
         console.error('Error loading simulator data:', error);
+        Alert.alert('Erreur', 'Impossible de charger vos données');
         return;
       }
 
@@ -87,6 +90,7 @@ export default function OnlineSimulatorScreen() {
       }
     } catch (error) {
       console.error('Error loading simulator data:', error);
+      Alert.alert('Erreur', 'Impossible de charger vos données');
     } finally {
       setLoading(false);
     }
@@ -269,32 +273,44 @@ export default function OnlineSimulatorScreen() {
   };
 
   const handleSave = async () => {
+    if (!user) {
+      console.log('No user found, cannot save');
+      return;
+    }
+
     try {
-      const { error } = await supabase
+      const dataToSave = {
+        user_id: user.id,
+        rake: rake ? parseFloat(rake) : null,
+        rakeback: rakeback ? parseFloat(rakeback) : null,
+        winrate: winrate ? parseFloat(winrate) : null,
+        hours_per_week: hoursPerWeek ? parseFloat(hoursPerWeek) : null,
+        limit: nlLimit ? parseInt(nlLimit) : null,
+        tables: tableCount ? parseInt(tableCount) : null,
+        bankroll: currentBankroll ? parseFloat(currentBankroll) : null,
+        cashout_monthly: monthlyWithdrawal ? parseFloat(monthlyWithdrawal) : null,
+        start_date: startDate.toISOString(),
+        duration_choice: simulationPeriod
+      };
+
+      console.log('Saving simulator data:', dataToSave);
+
+      const { data, error } = await supabase
         .from('simulator_cashgame_online')
-        .upsert({
-          user_id: user?.id,
-          rake: rake ? parseFloat(rake) : null,
-          rakeback: rakeback ? parseFloat(rakeback) : null,
-          winrate: winrate ? parseFloat(winrate) : null,
-          hours_per_week: hoursPerWeek ? parseFloat(hoursPerWeek) : null,
-          limit: nlLimit ? parseInt(nlLimit) : null,
-          tables: tableCount ? parseInt(tableCount) : null,
-          bankroll: currentBankroll ? parseFloat(currentBankroll) : null,
-          cashout_monthly: monthlyWithdrawal ? parseFloat(monthlyWithdrawal) : null,
-          start_date: startDate.toISOString(),
-          duration_choice: simulationPeriod
-        });
+        .upsert(dataToSave)
+        .select();
 
       if (error) {
         console.error('Error saving simulator data:', error);
+        Alert.alert('Erreur', 'Impossible de sauvegarder vos données');
         return;
       }
 
-      alert('Configuration sauvegardée avec succès !');
+      console.log('Successfully saved simulator data:', data);
+      Alert.alert('Succès', 'Configuration sauvegardée');
     } catch (error) {
       console.error('Error saving simulator data:', error);
-      alert('Erreur lors de la sauvegarde');
+      Alert.alert('Erreur', 'Impossible de sauvegarder vos données');
     }
   };
 
@@ -465,14 +481,14 @@ export default function OnlineSimulatorScreen() {
       </Card>
 
       <Button
-        title="💾 Sauvegarder la configuration"
+        title="💾 Sauvegarder"
         onPress={handleSave}
         variant="primary"
         style={styles.saveButton}
       />
 
       <Button
-        title="🔄 Réinitialiser le simulateur"
+        title="🔄 Réinitialiser"
         onPress={resetSimulator}
         variant="secondary"
         style={styles.resetButton}
