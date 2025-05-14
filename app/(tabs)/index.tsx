@@ -1,34 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { getRandomMotivationalMessage } from '@/utils/calculations';
 import { useAppContext } from '@/context/AppContext';
 import { calculateTotalBankroll } from '@/utils/calculations';
-import { Eye, EyeOff, MoveVertical as MoreVertical } from 'lucide-react-native';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { subDays, subMonths, subWeeks, startOfDay, isAfter } from 'date-fns';
 
 type TimePeriod = '24h' | 'Semaine' | 'Mois' | 'Trimestre' | 'Année';
 
 export default function HomeScreen() {
-  const { bankrollItems, bankrollHistory, addHistoryPoint } = useAppContext();
+  const { bankrollItems, bankrollHistory } = useAppContext();
   const router = useRouter();
   const [motivationalMessage, setMotivationalMessage] = useState('');
   const [showBankroll, setShowBankroll] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod | null>(null);
-  const [showMenu, setShowMenu] = useState(false);
-  const [lastResetTime, setLastResetTime] = useState<Date>(new Date());
 
   useEffect(() => {
     setMotivationalMessage(getRandomMotivationalMessage());
   }, []);
-
-  // Update history point when bankroll changes
-  useEffect(() => {
-    const totalBankroll = calculateTotalBankroll(bankrollItems);
-    addHistoryPoint(totalBankroll);
-  }, [bankrollItems]);
 
   const totalBankroll = calculateTotalBankroll(bankrollItems);
 
@@ -40,50 +32,26 @@ export default function HomeScreen() {
     return showBankroll ? amount.toLocaleString('fr-FR') : '*****';
   };
 
-  const handleReset = () => {
-    Alert.alert(
-      'Réinitialiser l\'évolution',
-      'Êtes-vous sûr de vouloir réinitialiser les compteurs d\'évolution ? Cette action ne peut pas être annulée.',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Réinitialiser',
-          style: 'destructive',
-          onPress: async () => {
-            await addHistoryPoint(totalBankroll);
-            setLastResetTime(new Date());
-            setShowMenu(false);
-          },
-        },
-      ]
-    );
-  };
-
   const calculateEvolution = (period: TimePeriod) => {
     const now = new Date();
     let startDate = startOfDay(now);
 
-    // Utiliser la date de dernière réinitialisation comme point de départ
-    if (isAfter(lastResetTime, startDate)) {
-      startDate = lastResetTime;
-    } else {
-      switch (period) {
-        case '24h':
-          startDate = subDays(now, 1);
-          break;
-        case 'Semaine':
-          startDate = subWeeks(now, 1);
-          break;
-        case 'Mois':
-          startDate = subMonths(now, 1);
-          break;
-        case 'Trimestre':
-          startDate = subMonths(now, 3);
-          break;
-        case 'Année':
-          startDate = subMonths(now, 12);
-          break;
-      }
+    switch (period) {
+      case '24h':
+        startDate = subDays(now, 1);
+        break;
+      case 'Semaine':
+        startDate = subWeeks(now, 1);
+        break;
+      case 'Mois':
+        startDate = subMonths(now, 1);
+        break;
+      case 'Trimestre':
+        startDate = subMonths(now, 3);
+        break;
+      case 'Année':
+        startDate = subMonths(now, 12);
+        break;
     }
 
     const filteredHistory = bankrollHistory
@@ -151,29 +119,13 @@ export default function HomeScreen() {
           style={styles.manageButton}
           size="large"
         />
-        <View style={styles.periodsHeader}>
-          <View style={styles.periodsContainer}>
-            {renderEvolution('24h')}
-            {renderEvolution('Semaine')}
-            {renderEvolution('Mois')}
-            {renderEvolution('Trimestre')}
-            {renderEvolution('Année')}
-          </View>
-          <TouchableOpacity
-            style={styles.menuButton}
-            onPress={() => setShowMenu(!showMenu)}
-          >
-            <MoreVertical size={20} color="#64748b" />
-          </TouchableOpacity>
+        <View style={styles.periodsContainer}>
+          {renderEvolution('24h')}
+          {renderEvolution('Semaine')}
+          {renderEvolution('Mois')}
+          {renderEvolution('Trimestre')}
+          {renderEvolution('Année')}
         </View>
-        {showMenu && (
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={handleReset}
-          >
-            <Text style={styles.menuItemText}>Réinitialiser</Text>
-          </TouchableOpacity>
-        )}
       </Card>
 
       <Card style={styles.motivationCard}>
@@ -222,35 +174,12 @@ const styles = StyleSheet.create({
     width: 200,
     marginBottom: 16,
   },
-  periodsHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    width: '100%',
-  },
   periodsContainer: {
-    flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 8,
     marginTop: 8,
-  },
-  menuButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  menuItem: {
-    backgroundColor: '#f1f5f9',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
-    width: '100%',
-  },
-  menuItemText: {
-    color: '#ef4444',
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
   },
   periodButton: {
     paddingHorizontal: 12,
