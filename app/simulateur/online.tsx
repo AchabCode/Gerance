@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card } from '@/components/Card';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Home } from 'lucide-react-native';
+import { ArrowLeft, Chrome as Home } from 'lucide-react-native';
 
 export default function OnlineSimulatorScreen() {
   const router = useRouter();
