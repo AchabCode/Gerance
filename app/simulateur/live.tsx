@@ -5,7 +5,7 @@ import { Input } from '@/components/Input';
 import { useAppContext } from '@/context/AppContext';
 import { calculateHourlyRate } from '@/utils/calculations';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Chrome as Home } from 'lucide-react-native';
+import { ArrowLeft, LayoutDashboard } from 'lucide-react-native';
 
 export default function LiveSimulatorScreen() {
   const router = useRouter();
@@ -52,7 +52,7 @@ export default function LiveSimulatorScreen() {
             onPress={() => router.push('/(tabs)')} 
             style={styles.navButton}
           >
-            <Home size={24} color="#0f172a" />
+            <LayoutDashboard size={24} color="#0f172a" />
           </TouchableOpacity>
         </View>
         <Text style={styles.title}>Simulateur Live</Text>

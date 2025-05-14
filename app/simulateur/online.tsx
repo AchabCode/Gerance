@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card } from '@/components/Card';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Chrome as Home } from 'lucide-react-native';
+import { ArrowLeft, LayoutDashboard } from 'lucide-react-native';
 
 export default function OnlineSimulatorScreen() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function OnlineSimulatorScreen() {
             onPress={() => router.push('/(tabs)')} 
             style={styles.navButton}
           >
-            <Home size={24} color="#0f172a" />
+            <LayoutDashboard size={24} color="#0f172a" />
           </TouchableOpacity>
         </View>
         <Text style={styles.title}>Simulateur Online</Text>
