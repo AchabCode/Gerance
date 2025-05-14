@@ -4,14 +4,15 @@ import { Card } from '@/components/Card';
 import { Input } from '@/components/Input';
 import { Select } from '@/components/Select';
 import { DatePicker } from '@/components/DatePicker';
+import { Button } from '@/components/Button';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, LayoutDashboard } from 'lucide-react-native';
 import { useAppContext } from '@/context/AppContext';
 import { calculateTotalBankroll } from '@/utils/calculations';
 import { format, addWeeks, addMonths, addYears } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '@/lib/supabase';
 
-// NL limits (the number represents the big blind in cents)
 const NL_LIMITS = [2, 5, 10, 20, 35, 50, 75, 100, 150, 200, 250, 300, 400, 500, 1000];
 const TABLE_COUNTS = Array.from({ length: 12 }, (_, i) => i + 1);
 const SIMULATION_PERIODS = [
@@ -25,7 +26,6 @@ const SIMULATION_PERIODS = [
   { label: '1 an', value: '1y' },
 ];
 
-// Convert NL limit to BB value in euros
 const nlToBB = (nl: number) => nl / 100;
 
 export default function OnlineSimulatorScreen() {
@@ -44,31 +44,106 @@ export default function OnlineSimulatorScreen() {
   const [startDate, setStartDate] = useState(new Date());
   const [simulationPeriod, setSimulationPeriod] = useState(SIMULATION_PERIODS[0].value);
 
+  useEffect(() => {
+    loadSimulatorConfig();
+  }, []);
+
+  const loadSimulatorConfig = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('simulator_configs')
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setRake(data.rake?.toString() || '');
+        setRakeback(data.rakeback?.toString() || '');
+        setWinrate(data.winrate?.toString() || '');
+        setHoursPerWeek(data.hours_per_week?.toString() || '');
+        setNlLimit(data.nl_limit?.toString() || NL_LIMITS[0].toString());
+        setTableCount(data.table_count?.toString() || '1');
+        setCurrentBankroll(data.current_bankroll?.toString() || totalBankroll.toString());
+        setMonthlyWithdrawal(data.monthly_withdrawal?.toString() || '');
+        setStartDate(new Date(data.start_date || new Date()));
+        setSimulationPeriod(data.simulation_period || SIMULATION_PERIODS[0].value);
+      }
+    } catch (error) {
+      console.error('Error loading simulator config:', error);
+    }
+  };
+
+  const saveSimulatorConfig = async () => {
+    try {
+      const { error } = await supabase
+        .from('simulator_configs')
+        .upsert({
+          rake: parseFloat(rake) || 0,
+          rakeback: parseFloat(rakeback) || 0,
+          winrate: parseFloat(winrate) || 0,
+          hours_per_week: parseFloat(hoursPerWeek) || 0,
+          nl_limit: parseInt(nlLimit),
+          table_count: parseInt(tableCount),
+          current_bankroll: parseFloat(currentBankroll) || 0,
+          monthly_withdrawal: parseFloat(monthlyWithdrawal) || 0,
+          start_date: startDate.toISOString(),
+          simulation_period: simulationPeriod,
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving simulator config:', error);
+    }
+  };
+
+  useEffect(() => {
+    saveSimulatorConfig();
+  }, [
+    rake,
+    rakeback,
+    winrate,
+    hoursPerWeek,
+    nlLimit,
+    tableCount,
+    currentBankroll,
+    monthlyWithdrawal,
+    startDate,
+    simulationPeriod,
+  ]);
+
+  const resetSimulator = () => {
+    setRake('');
+    setRakeback('');
+    setWinrate('');
+    setHoursPerWeek('');
+    setNlLimit(NL_LIMITS[0].toString());
+    setTableCount('1');
+    setCurrentBankroll(totalBankroll.toString());
+    setMonthlyWithdrawal('');
+    setStartDate(new Date());
+    setSimulationPeriod(SIMULATION_PERIODS[0].value);
+  };
+
   const handsPerHour = parseInt(tableCount) * 70;
   const bbValue = nlToBB(parseInt(nlLimit));
 
-  // Calculate hourly rate (Gains + Rakeback)
   const calculateHourlyRate = () => {
     const rakeValue = parseFloat(rake) || 0;
     const rakebackValue = (parseFloat(rakeback) || 0) / 100;
     const winrateValue = parseFloat(winrate) || 0;
 
-    // Divide by 100 since rake and winrate are in bb/100
     const bbPerHour = ((winrateValue + (rakeValue * rakebackValue)) * handsPerHour) / 100;
     return bbPerHour * bbValue;
   };
 
-  // Calculate hourly rakeback
   const calculateHourlyRakeback = () => {
     const rakeValue = parseFloat(rake) || 0;
     const rakebackValue = (parseFloat(rakeback) || 0) / 100;
 
-    // Divide by 100 since rake is in bb/100
     const bbRakebackPerHour = (rakeValue * rakebackValue * handsPerHour) / 100;
     return bbRakebackPerHour * bbValue;
   };
 
-  // Calculate net gains for the chosen period
   const calculateNetGains = () => {
     const hourlyRate = calculateHourlyRate();
     const hoursPerWeekValue = parseFloat(hoursPerWeek) || 0;
@@ -304,6 +379,13 @@ export default function OnlineSimulatorScreen() {
           </View>
         </View>
       </Card>
+
+      <Button
+        title="🔄 Réinitialiser le simulateur"
+        onPress={resetSimulator}
+        variant="secondary"
+        style={styles.resetButton}
+      />
     </ScrollView>
   );
 }
@@ -392,5 +474,8 @@ const styles = StyleSheet.create({
   },
   negative: {
     color: '#ef4444',
+  },
+  resetButton: {
+    marginTop: 24,
   },
 });
