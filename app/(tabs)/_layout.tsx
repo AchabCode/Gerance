@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { LayoutDashboard, ChartBar, Calculator } from 'lucide-react-native';
+import { LayoutDashboard, ChartBar } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -53,7 +53,7 @@ export default function TabLayout() {
         name="journal"
         options={{
           title: 'Simulateur',
-          tabBarIcon: ({ color }) => <Calculator size={24} color={color} />,
+          tabBarIcon: ({ color }) => <ChartBar size={24} color={color} />,
         }}
       />
     </Tabs>
