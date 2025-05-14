@@ -8,7 +8,6 @@ import { useAppContext } from '@/context/AppContext';
 import { calculateTotalBankroll } from '@/utils/calculations';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { subDays, subMonths, subWeeks, startOfDay, isAfter } from 'date-fns';
-import { BankrollChart } from '@/components/BankrollChart';
 
 type TimePeriod = '24h' | 'Semaine' | 'Mois' | 'Trimestre' | 'Année';
 
@@ -128,8 +127,6 @@ export default function HomeScreen() {
           {renderEvolution('Année')}
         </View>
       </Card>
-
-      <BankrollChart data={bankrollHistory} />
 
       <Card style={styles.motivationCard}>
         <Text style={styles.motivationLabel}>Motivation du jour</Text>
