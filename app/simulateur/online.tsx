@@ -45,22 +45,26 @@ export default function OnlineSimulatorScreen() {
   const [monthlyWithdrawal, setMonthlyWithdrawal] = useState('');
   const [startDate, setStartDate] = useState(new Date());
   const [simulationPeriod, setSimulationPeriod] = useState(SIMULATION_PERIODS[0].value);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadSimulatorData();
-  }, [user]);
+    if (user) {
+      loadSimulatorData();
+    }
+  }, [user?.id]);
 
   const loadSimulatorData = async () => {
     if (!user) return;
 
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('simulator_cashgame_online')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error loading simulator data:', error);
         return;
       }
@@ -79,6 +83,8 @@ export default function OnlineSimulatorScreen() {
       }
     } catch (error) {
       console.error('Error loading simulator data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,14 +108,18 @@ export default function OnlineSimulatorScreen() {
           duration_choice: simulationPeriod
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving simulator data:', error);
+      }
     } catch (error) {
       console.error('Error saving simulator data:', error);
     }
   };
 
   useEffect(() => {
-    saveSimulatorData();
+    if (!loading) {
+      saveSimulatorData();
+    }
   }, [
     rake,
     rakeback,
@@ -119,7 +129,7 @@ export default function OnlineSimulatorScreen() {
     tableCount,
     currentBankroll,
     monthlyWithdrawal,
-    startDate,
+    startDate.toISOString(),
     simulationPeriod
   ]);
 
@@ -132,7 +142,10 @@ export default function OnlineSimulatorScreen() {
         .delete()
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error resetting simulator:', error);
+        return;
+      }
 
       setRake('');
       setRakeback('');
