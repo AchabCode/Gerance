@@ -48,23 +48,24 @@ export default function OnlineSimulatorScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadSimulatorData();
+    if (user) {
+      loadSimulatorData();
+    }
   }, [user?.id]);
 
   const loadSimulatorData = async () => {
     if (!user) return;
 
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('simulator_cashgame_online')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      console.log('🔍 Loading simulator data:', { data, error });
-
       if (error) {
-        console.error('❌ Error loading simulator data:', error);
+        console.error('Error loading simulator data:', error);
         return;
       }
 
@@ -77,11 +78,13 @@ export default function OnlineSimulatorScreen() {
         setTableCount(data.tables?.toString() || '1');
         setCurrentBankroll(data.bankroll?.toString() || totalBankroll.toString());
         setMonthlyWithdrawal(data.cashout_monthly?.toString() || '');
-        setStartDate(data.start_date ? new Date(data.start_date) : new Date());
+        setStartDate(new Date(data.start_date || new Date()));
         setSimulationPeriod(data.duration_choice || SIMULATION_PERIODS[0].value);
       }
     } catch (error) {
-      console.error('❌ Error in loadSimulatorData:', error);
+      console.error('Error loading simulator data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,7 +92,7 @@ export default function OnlineSimulatorScreen() {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('simulator_cashgame_online')
         .upsert({
           user_id: user.id,
@@ -103,21 +106,18 @@ export default function OnlineSimulatorScreen() {
           cashout_monthly: monthlyWithdrawal ? parseFloat(monthlyWithdrawal) : null,
           start_date: startDate.toISOString(),
           duration_choice: simulationPeriod
-        })
-        .select();
-
-      console.log('💾 Saving simulator data:', { data, error });
+        });
 
       if (error) {
-        console.error('❌ Error saving simulator data:', error);
+        console.error('Error saving simulator data:', error);
       }
     } catch (error) {
-      console.error('❌ Error in saveSimulatorData:', error);
+      console.error('Error saving simulator data:', error);
     }
   };
 
   useEffect(() => {
-    if (user && (rake || rakeback || winrate || hoursPerWeek || nlLimit || tableCount || currentBankroll || monthlyWithdrawal)) {
+    if (!loading) {
       saveSimulatorData();
     }
   }, [
@@ -251,6 +251,36 @@ export default function OnlineSimulatorScreen() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
+  };
+
+  const handleSave = async () => {
+    try {
+      const { error } = await supabase
+        .from('simulator_cashgame_online')
+        .upsert({
+          user_id: user?.id,
+          rake: rake ? parseFloat(rake) : null,
+          rakeback: rakeback ? parseFloat(rakeback) : null,
+          winrate: winrate ? parseFloat(winrate) : null,
+          hours_per_week: hoursPerWeek ? parseFloat(hoursPerWeek) : null,
+          limit: nlLimit ? parseInt(nlLimit) : null,
+          tables: tableCount ? parseInt(tableCount) : null,
+          bankroll: currentBankroll ? parseFloat(currentBankroll) : null,
+          cashout_monthly: monthlyWithdrawal ? parseFloat(monthlyWithdrawal) : null,
+          start_date: startDate.toISOString(),
+          duration_choice: simulationPeriod
+        });
+
+      if (error) {
+        console.error('Error saving simulator data:', error);
+        return;
+      }
+
+      alert('Configuration sauvegardée avec succès !');
+    } catch (error) {
+      console.error('Error saving simulator data:', error);
+      alert('Erreur lors de la sauvegarde');
+    }
   };
 
   return (
@@ -420,6 +450,13 @@ export default function OnlineSimulatorScreen() {
       </Card>
 
       <Button
+        title="💾 Sauvegarder la configuration"
+        onPress={handleSave}
+        variant="primary"
+        style={styles.saveButton}
+      />
+
+      <Button
         title="🔄 Réinitialiser le simulateur"
         onPress={resetSimulator}
         variant="secondary"
@@ -514,7 +551,11 @@ const styles = StyleSheet.create({
   negative: {
     color: '#ef4444',
   },
-  resetButton: {
+  saveButton: {
     marginTop: 24,
+    marginBottom: 12,
+  },
+  resetButton: {
+    marginTop: 0,
   },
 });
