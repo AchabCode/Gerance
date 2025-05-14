@@ -48,24 +48,23 @@ export default function OnlineSimulatorScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      loadSimulatorData();
-    }
+    loadSimulatorData();
   }, [user?.id]);
 
   const loadSimulatorData = async () => {
     if (!user) return;
 
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('simulator_cashgame_online')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 
+      console.log('🔍 Loading simulator data:', { data, error });
+
       if (error) {
-        console.error('Error loading simulator data:', error);
+        console.error('❌ Error loading simulator data:', error);
         return;
       }
 
@@ -78,13 +77,11 @@ export default function OnlineSimulatorScreen() {
         setTableCount(data.tables?.toString() || '1');
         setCurrentBankroll(data.bankroll?.toString() || totalBankroll.toString());
         setMonthlyWithdrawal(data.cashout_monthly?.toString() || '');
-        setStartDate(new Date(data.start_date || new Date()));
+        setStartDate(data.start_date ? new Date(data.start_date) : new Date());
         setSimulationPeriod(data.duration_choice || SIMULATION_PERIODS[0].value);
       }
     } catch (error) {
-      console.error('Error loading simulator data:', error);
-    } finally {
-      setLoading(false);
+      console.error('❌ Error in loadSimulatorData:', error);
     }
   };
 
@@ -92,7 +89,7 @@ export default function OnlineSimulatorScreen() {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('simulator_cashgame_online')
         .upsert({
           user_id: user.id,
@@ -106,18 +103,21 @@ export default function OnlineSimulatorScreen() {
           cashout_monthly: monthlyWithdrawal ? parseFloat(monthlyWithdrawal) : null,
           start_date: startDate.toISOString(),
           duration_choice: simulationPeriod
-        });
+        })
+        .select();
+
+      console.log('💾 Saving simulator data:', { data, error });
 
       if (error) {
-        console.error('Error saving simulator data:', error);
+        console.error('❌ Error saving simulator data:', error);
       }
     } catch (error) {
-      console.error('Error saving simulator data:', error);
+      console.error('❌ Error in saveSimulatorData:', error);
     }
   };
 
   useEffect(() => {
-    if (!loading) {
+    if (user && (rake || rakeback || winrate || hoursPerWeek || nlLimit || tableCount || currentBankroll || monthlyWithdrawal)) {
       saveSimulatorData();
     }
   }, [
