@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Card } from '@/components/Card';
 import { Input } from '@/components/Input';
@@ -42,6 +42,73 @@ export default function OnlineSimulatorScreen() {
 
   const handsPerHour = parseInt(tableCount) * 70;
 
+  // Calculate hourly rate (Gains + Rakeback)
+  const calculateHourlyRate = () => {
+    const rakeValue = parseFloat(rake) || 0;
+    const rakebackValue = (parseFloat(rakeback) || 0) / 100;
+    const winrateValue = parseFloat(winrate) || 0;
+    const bbLimitValue = parseFloat(bbLimit) || 0;
+
+    const bbPerHour = ((winrateValue + (rakeValue * rakebackValue)) * (handsPerHour / 100));
+    return bbPerHour * bbLimitValue;
+  };
+
+  // Calculate hourly rakeback
+  const calculateHourlyRakeback = () => {
+    const rakeValue = parseFloat(rake) || 0;
+    const rakebackValue = (parseFloat(rakeback) || 0) / 100;
+    const bbLimitValue = parseFloat(bbLimit) || 0;
+
+    const bbRakebackPerHour = rakeValue * rakebackValue * (handsPerHour / 100);
+    return bbRakebackPerHour * bbLimitValue;
+  };
+
+  // Calculate net gains for the chosen period
+  const calculateNetGains = () => {
+    const hourlyRate = calculateHourlyRate();
+    const hoursPerWeekValue = parseFloat(hoursPerWeek) || 0;
+    const monthlyWithdrawalValue = parseFloat(monthlyWithdrawal) || 0;
+
+    let totalWeeks = 0;
+    const [value, unit] = simulationPeriod.split('');
+    const numValue = parseInt(value);
+
+    switch (unit) {
+      case 'w':
+        totalWeeks = numValue;
+        break;
+      case 'm':
+        totalWeeks = numValue * 4.33;
+        break;
+      case 'y':
+        totalWeeks = 52;
+        break;
+    }
+
+    const totalHours = hoursPerWeekValue * totalWeeks;
+    const grossGains = hourlyRate * totalHours;
+
+    let withdrawalMultiplier = 0;
+    switch (simulationPeriod) {
+      case '1w': withdrawalMultiplier = 0.25; break;
+      case '2w': withdrawalMultiplier = 0.5; break;
+      case '3w': withdrawalMultiplier = 0.75; break;
+      case '1m': withdrawalMultiplier = 1; break;
+      case '2m': withdrawalMultiplier = 2; break;
+      case '3m': withdrawalMultiplier = 3; break;
+      case '6m': withdrawalMultiplier = 6; break;
+      case '1y': withdrawalMultiplier = 12; break;
+    }
+
+    const totalWithdrawal = monthlyWithdrawalValue * withdrawalMultiplier;
+    return grossGains - totalWithdrawal;
+  };
+
+  const hourlyRate = calculateHourlyRate();
+  const hourlyRakeback = calculateHourlyRakeback();
+  const netGains = calculateNetGains();
+  const finalBankroll = parseFloat(currentBankroll) + netGains;
+
   const getSimulationEndDate = () => {
     const [value, unit] = simulationPeriod.split('');
     const weeks = parseInt(value);
@@ -56,6 +123,15 @@ export default function OnlineSimulatorScreen() {
       default:
         return startDate;
     }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
   return (
@@ -183,6 +259,40 @@ export default function OnlineSimulatorScreen() {
             </Text>
           </View>
         </View>
+
+        <View style={styles.resultsSection}>
+          <Text style={styles.sectionTitle}>Résultats</Text>
+          
+          <View style={styles.resultCard}>
+            <Text style={styles.resultLabel}>Taux horaire (Gains + Rakeback)</Text>
+            <Text style={[styles.resultValue, hourlyRate >= 0 ? styles.positive : styles.negative]}>
+              {formatCurrency(hourlyRate)}/h
+            </Text>
+          </View>
+
+          <View style={styles.resultCard}>
+            <Text style={styles.resultLabel}>Rakeback horaire</Text>
+            <Text style={[styles.resultValue, styles.positive]}>
+              {formatCurrency(hourlyRakeback)}/h
+            </Text>
+          </View>
+
+          <View style={styles.resultCard}>
+            <Text style={styles.resultLabel}>
+              Gains nets sur {SIMULATION_PERIODS.find(p => p.value === simulationPeriod)?.label.toLowerCase()}
+            </Text>
+            <Text style={[styles.resultValue, netGains >= 0 ? styles.positive : styles.negative]}>
+              {formatCurrency(netGains)}
+            </Text>
+          </View>
+
+          <View style={styles.resultCard}>
+            <Text style={styles.resultLabel}>Projection bankroll finale</Text>
+            <Text style={[styles.resultValue, finalBankroll >= 0 ? styles.positive : styles.negative]}>
+              {formatCurrency(finalBankroll)}
+            </Text>
+          </View>
+        </View>
       </Card>
     </ScrollView>
   );
@@ -195,6 +305,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
+    paddingBottom: 32,
   },
   header: {
     marginTop: 16,
@@ -239,5 +350,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#0f172a',
+  },
+  resultsSection: {
+    backgroundColor: '#f8fafc',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  resultCard: {
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  resultLabel: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 4,
+  },
+  resultValue: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  positive: {
+    color: '#10b981',
+  },
+  negative: {
+    color: '#ef4444',
   },
 });
