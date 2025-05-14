@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card } from '@/components/Card';
 import { useRouter } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Home } from 'lucide-react-native';
 
 export default function OnlineSimulatorScreen() {
   const router = useRouter();
@@ -10,12 +10,20 @@ export default function OnlineSimulatorScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color="#0f172a" />
-        </TouchableOpacity>
+        <View style={styles.navigation}>
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={styles.navButton}
+          >
+            <ArrowLeft size={24} color="#0f172a" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => router.push('/(tabs)')} 
+            style={styles.navButton}
+          >
+            <Home size={24} color="#0f172a" />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.title}>Simulateur Online</Text>
       </View>
       
@@ -37,11 +45,14 @@ const styles = StyleSheet.create({
   header: {
     marginTop: 16,
     marginBottom: 24,
+  },
+  navigation: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  backButton: {
-    marginRight: 12,
+  navButton: {
+    marginRight: 16,
   },
   title: {
     fontSize: 24,
