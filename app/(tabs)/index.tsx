@@ -5,22 +5,44 @@ import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { getRandomMotivationalMessage } from '@/utils/calculations';
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { calculateTotalBankroll } from '@/utils/calculations';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { subDays, subMonths, subWeeks, startOfDay, isAfter } from 'date-fns';
+import { supabase } from '@/lib/supabase';
 
 type TimePeriod = '24h' | 'Semaine' | 'Mois' | 'Trimestre' | 'Année';
 
 export default function HomeScreen() {
   const { bankrollItems, bankrollHistory } = useAppContext();
+  const { user } = useAuth();
   const router = useRouter();
   const [motivationalMessage, setMotivationalMessage] = useState('');
   const [showBankroll, setShowBankroll] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     setMotivationalMessage(getRandomMotivationalMessage());
-  }, []);
+    if (user) {
+      loadProfile();
+    }
+  }, [user]);
+
+  const loadProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) throw error;
+      if (data) setUsername(data.username);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  };
 
   const totalBankroll = calculateTotalBankroll(bankrollItems);
 
@@ -99,6 +121,12 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      {username && (
+        <Text style={styles.welcomeText}>
+          Bienvenue, {username} 👋
+        </Text>
+      )}
+      
       <Card style={styles.bankrollCard}>
         <Text style={styles.cardLabel}>Ma Bankroll actuelle</Text>
         <View style={styles.bankrollContainer}>
@@ -143,6 +171,12 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
+  },
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 16,
   },
   bankrollCard: {
     alignItems: 'center',
