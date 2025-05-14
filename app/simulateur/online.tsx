@@ -1,11 +1,21 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card } from '@/components/Card';
+import { useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
 
 export default function OnlineSimulatorScreen() {
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={styles.backButton}
+        >
+          <ArrowLeft size={24} color="#0f172a" />
+        </TouchableOpacity>
         <Text style={styles.title}>Simulateur Online</Text>
       </View>
       
@@ -27,6 +37,11 @@ const styles = StyleSheet.create({
   header: {
     marginTop: 16,
     marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 12,
   },
   title: {
     fontSize: 24,

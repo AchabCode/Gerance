@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Card } from '@/components/Card';
 import { Input } from '@/components/Input';
 import { useAppContext } from '@/context/AppContext';
 import { calculateHourlyRate } from '@/utils/calculations';
+import { useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
 
 export default function LiveSimulatorScreen() {
+  const router = useRouter();
   const { hourlyRateParams, updateHourlyRateParams } = useAppContext();
   
   const [bb_amount, setBbAmount] = useState(hourlyRateParams.bb_amount.toString());
@@ -38,6 +41,12 @@ export default function LiveSimulatorScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={styles.backButton}
+        >
+          <ArrowLeft size={24} color="#0f172a" />
+        </TouchableOpacity>
         <Text style={styles.title}>Simulateur Live</Text>
       </View>
       
@@ -149,6 +158,11 @@ const styles = StyleSheet.create({
   header: {
     marginTop: 16,
     marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 12,
   },
   title: {
     fontSize: 24,
