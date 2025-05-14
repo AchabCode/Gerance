@@ -1,13 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/Card';
+import { Input } from '@/components/Input';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, Key, User, ArrowLeft } from 'lucide-react-native';
+import { LogOut, Key, User, ArrowLeft, Check } from 'lucide-react-native';
+import { supabase } from '@/lib/supabase';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { signOut, user } = useAuth();
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -24,9 +32,43 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleChangePassword = () => {
-    // To be implemented
-    Alert.alert('À venir', 'Cette fonctionnalité sera bientôt disponible');
+  const handleChangePassword = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Verify current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        throw new Error('Mot de passe actuel incorrect');
+      }
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) throw updateError;
+
+      setSuccess(true);
+      setShowPasswordForm(false);
+      setCurrentPassword('');
+      setNewPassword('');
+
+      // Reset success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(false);
+      }, 3000);
+
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,12 +91,55 @@ export default function SettingsScreen() {
           <Text style={styles.email}>{user?.email}</Text>
         </View>
 
-        <TouchableOpacity style={styles.option} onPress={handleChangePassword}>
+        <TouchableOpacity 
+          style={styles.option} 
+          onPress={() => setShowPasswordForm(!showPasswordForm)}
+        >
           <Key size={20} color="#64748b" />
           <Text style={styles.optionText}>Changer le mot de passe</Text>
+          {success && (
+            <View style={styles.successIcon}>
+              <Check size={20} color="#10b981" />
+            </View>
+          )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.option, styles.logoutOption]} onPress={handleSignOut}>
+        {showPasswordForm && (
+          <View style={styles.passwordForm}>
+            {error && <Text style={styles.error}>{error}</Text>}
+            
+            <Input
+              label="Mot de passe actuel"
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              secureTextEntry
+              placeholder="Entrez votre mot de passe actuel"
+            />
+
+            <Input
+              label="Nouveau mot de passe"
+              value={newPassword}
+              onChangeText={setNewPassword}
+              secureTextEntry
+              placeholder="Entrez votre nouveau mot de passe"
+            />
+
+            <TouchableOpacity 
+              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+              onPress={handleChangePassword}
+              disabled={loading || !currentPassword || !newPassword}
+            >
+              <Text style={styles.submitButtonText}>
+                {loading ? 'Modification...' : 'Modifier le mot de passe'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <TouchableOpacity 
+          style={[styles.option, styles.logoutOption]} 
+          onPress={handleSignOut}
+        >
           <LogOut size={20} color="#ef4444" />
           <Text style={[styles.optionText, styles.logoutText]}>Se déconnecter</Text>
         </TouchableOpacity>
@@ -113,6 +198,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#0f172a',
     marginLeft: 12,
+    flex: 1,
   },
   logoutOption: {
     borderBottomWidth: 0,
@@ -120,5 +206,34 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: '#ef4444',
+  },
+  passwordForm: {
+    paddingTop: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  error: {
+    color: '#ef4444',
+    marginBottom: 16,
+    fontSize: 14,
+  },
+  submitButton: {
+    backgroundColor: '#3B82F6',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  submitButtonDisabled: {
+    opacity: 0.5,
+  },
+  submitButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  successIcon: {
+    marginLeft: 'auto',
   },
 });
