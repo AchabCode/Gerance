@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/Card';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, Key, User } from 'lucide-react-native';
+import { LogOut, Key, User, ArrowLeft } from 'lucide-react-native';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -36,7 +36,15 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Paramètres</Text>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={styles.backButton}
+        >
+          <ArrowLeft size={24} color="#0f172a" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Paramètres</Text>
+      </View>
 
       <Card>
         <Text style={styles.sectionTitle}>Compte</Text>
@@ -66,12 +74,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     padding: 16,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 4,
+  },
   title: {
     fontSize: 24,
     fontWeight: '700',
     color: '#0f172a',
-    marginTop: 16,
-    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
