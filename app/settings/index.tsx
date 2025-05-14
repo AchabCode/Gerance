@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/Card';
@@ -13,9 +13,31 @@ export default function SettingsScreen() {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      loadProfile();
+    }
+  }, [user]);
+
+  const loadProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) throw error;
+      if (data) setUsername(data.username || '');
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -67,13 +89,53 @@ export default function SettingsScreen() {
       setCurrentPassword('');
       setNewPassword('');
 
-      // Reset success message after 3 seconds
       setTimeout(() => {
         setSuccess(false);
       }, 3000);
 
     } catch (error: any) {
       setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangeUsername = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (!username.match(/^[a-zA-Z0-9]+$/)) {
+        throw new Error('Le pseudo ne peut contenir que des lettres et des chiffres');
+      }
+
+      // Check if username exists
+      const { data: existingUser, error: checkError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .neq('id', user?.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingUser) {
+        throw new Error('Ce pseudo est déjà utilisé');
+      }
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ username })
+        .eq('id', user?.id);
+
+      if (updateError) throw updateError;
+
+      Alert.alert('Succès', 'Votre pseudo a été mis à jour');
+    } catch (error: any) {
+      setError(error.message);
+      Alert.alert('Erreur', error.message);
     } finally {
       setLoading(false);
     }
@@ -97,6 +159,25 @@ export default function SettingsScreen() {
         <View style={styles.emailContainer}>
           <User size={20} color="#64748b" />
           <Text style={styles.email}>{user?.email}</Text>
+        </View>
+
+        <View style={styles.usernameContainer}>
+          <Input
+            label="Pseudo"
+            value={username}
+            onChangeText={setUsername}
+            placeholder="Choisissez un pseudo"
+            autoCapitalize="none"
+          />
+          <TouchableOpacity
+            style={[styles.usernameButton, loading && styles.buttonDisabled]}
+            onPress={handleChangeUsername}
+            disabled={loading}
+          >
+            <Text style={styles.usernameButtonText}>
+              {loading ? 'Modification...' : 'Modifier le pseudo'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity 
@@ -194,6 +275,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#64748b',
     marginLeft: 12,
+  },
+  usernameContainer: {
+    marginVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    paddingBottom: 12,
+  },
+  usernameButton: {
+    backgroundColor: '#3B82F6',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  usernameButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   option: {
     flexDirection: 'row',

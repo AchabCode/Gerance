@@ -7,11 +7,16 @@ import { supabase } from '@/lib/supabase';
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  const validateUsername = (username: string) => {
+    return /^[a-zA-Z0-9]+$/.test(username);
+  };
 
   const handleRegister = async () => {
     try {
@@ -22,12 +27,42 @@ export default function RegisterScreen() {
         throw new Error('Les mots de passe ne correspondent pas');
       }
 
-      const { error } = await supabase.auth.signUp({
+      if (!validateUsername(username)) {
+        throw new Error('Le pseudo ne peut contenir que des lettres et des chiffres');
+      }
+
+      // Check if username exists
+      const { data: existingUser, error: checkError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingUser) {
+        throw new Error('Ce pseudo est déjà utilisé');
+      }
+
+      // Sign up user
+      const { error: signUpError, data: { user } } = await supabase.auth.signUp({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+
+      // Update profile with username
+      if (user) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ username })
+          .eq('id', user.id);
+
+        if (updateError) throw updateError;
+      }
 
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -45,6 +80,14 @@ export default function RegisterScreen() {
       </View>
 
       {error && <Text style={styles.error}>{error}</Text>}
+
+      <Input
+        label="Pseudo"
+        value={username}
+        onChangeText={setUsername}
+        placeholder="Choisissez un pseudo"
+        autoCapitalize="none"
+      />
 
       <Input
         label="Email"
