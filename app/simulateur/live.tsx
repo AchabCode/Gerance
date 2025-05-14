@@ -5,7 +5,7 @@ import { Input } from '@/components/Input';
 import { useAppContext } from '@/context/AppContext';
 import { calculateHourlyRate } from '@/utils/calculations';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Home } from 'lucide-react-native';
+import { ArrowLeft, Chrome as Home } from 'lucide-react-native';
 
 export default function LiveSimulatorScreen() {
   const router = useRouter();
