@@ -1,4 +1,3 @@
-// context/AuthContext.tsx
 import React, {
     createContext,
     useState,
@@ -8,6 +7,7 @@ import React, {
 } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
+import { useRouter } from 'expo-router'
 
 interface AuthContextType {
     user: User | null
@@ -26,10 +26,11 @@ const AuthContext = createContext<AuthContextType>({
 })
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
-                                                                    children,
-                                                                }) => {
+    children,
+}) => {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
+    const router = useRouter()
 
     useEffect(() => {
         // session au chargement
@@ -43,6 +44,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null)
+            if (!session?.user) {
+                router.replace('/login')
+            }
         })
 
         return () => {
