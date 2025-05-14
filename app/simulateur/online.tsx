@@ -8,6 +8,7 @@ import { Button } from '@/components/Button';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, LayoutDashboard } from 'lucide-react-native';
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { calculateTotalBankroll } from '@/utils/calculations';
 import { format, addWeeks, addMonths, addYears } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -30,6 +31,7 @@ const nlToBB = (nl: number) => nl / 100;
 
 export default function OnlineSimulatorScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const { bankrollItems } = useAppContext();
   const totalBankroll = calculateTotalBankroll(bankrollItems);
 
@@ -53,9 +55,10 @@ export default function OnlineSimulatorScreen() {
       const { data, error } = await supabase
         .from('simulator_configs')
         .select('*')
+        .eq('user_id', user?.id)
         .single();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') throw error;
       if (data) {
         setRake(data.rake?.toString() || '');
         setRakeback(data.rakeback?.toString() || '');
@@ -74,10 +77,13 @@ export default function OnlineSimulatorScreen() {
   };
 
   const saveSimulatorConfig = async () => {
+    if (!user) return;
+    
     try {
       const { error } = await supabase
         .from('simulator_configs')
         .upsert({
+          user_id: user.id,
           rake: parseFloat(rake) || 0,
           rakeback: parseFloat(rakeback) || 0,
           winrate: parseFloat(winrate) || 0,
