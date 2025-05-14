@@ -11,7 +11,8 @@ import { calculateTotalBankroll } from '@/utils/calculations';
 import { format, addWeeks, addMonths, addYears } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-const BB_LIMITS = [2, 5, 10, 20, 35, 50, 75, 100, 150, 200, 250, 300, 400, 500, 1000];
+// NL limits (the number represents the big blind in cents)
+const NL_LIMITS = [2, 5, 10, 20, 35, 50, 75, 100, 150, 200, 250, 300, 400, 500, 1000];
 const TABLE_COUNTS = Array.from({ length: 12 }, (_, i) => i + 1);
 const SIMULATION_PERIODS = [
   { label: '1 semaine', value: '1w' },
@@ -24,6 +25,9 @@ const SIMULATION_PERIODS = [
   { label: '1 an', value: '1y' },
 ];
 
+// Convert NL limit to BB value in euros
+const nlToBB = (nl: number) => nl / 100;
+
 export default function OnlineSimulatorScreen() {
   const router = useRouter();
   const { bankrollItems } = useAppContext();
@@ -33,7 +37,7 @@ export default function OnlineSimulatorScreen() {
   const [rakeback, setRakeback] = useState('');
   const [winrate, setWinrate] = useState('');
   const [hoursPerWeek, setHoursPerWeek] = useState('');
-  const [bbLimit, setBbLimit] = useState(BB_LIMITS[0].toString());
+  const [nlLimit, setNlLimit] = useState(NL_LIMITS[0].toString());
   const [tableCount, setTableCount] = useState('1');
   const [currentBankroll, setCurrentBankroll] = useState(totalBankroll.toString());
   const [monthlyWithdrawal, setMonthlyWithdrawal] = useState('');
@@ -41,28 +45,27 @@ export default function OnlineSimulatorScreen() {
   const [simulationPeriod, setSimulationPeriod] = useState(SIMULATION_PERIODS[0].value);
 
   const handsPerHour = parseInt(tableCount) * 70;
+  const bbValue = nlToBB(parseInt(nlLimit));
 
   // Calculate hourly rate (Gains + Rakeback)
   const calculateHourlyRate = () => {
     const rakeValue = parseFloat(rake) || 0;
     const rakebackValue = (parseFloat(rakeback) || 0) / 100;
     const winrateValue = parseFloat(winrate) || 0;
-    const bbLimitValue = parseFloat(bbLimit) || 0;
 
     // Divide by 100 since rake and winrate are in bb/100
     const bbPerHour = ((winrateValue + (rakeValue * rakebackValue)) * handsPerHour) / 100;
-    return bbPerHour * bbLimitValue;
+    return bbPerHour * bbValue;
   };
 
   // Calculate hourly rakeback
   const calculateHourlyRakeback = () => {
     const rakeValue = parseFloat(rake) || 0;
     const rakebackValue = (parseFloat(rakeback) || 0) / 100;
-    const bbLimitValue = parseFloat(bbLimit) || 0;
 
     // Divide by 100 since rake is in bb/100
     const bbRakebackPerHour = (rakeValue * rakebackValue * handsPerHour) / 100;
-    return bbRakebackPerHour * bbLimitValue;
+    return bbRakebackPerHour * bbValue;
   };
 
   // Calculate net gains for the chosen period
@@ -193,14 +196,19 @@ export default function OnlineSimulatorScreen() {
           />
           
           <Select
-            label="Limite (BB)"
-            value={bbLimit}
-            onValueChange={setBbLimit}
-            items={BB_LIMITS.map(limit => ({
-              label: `${limit} BB`,
+            label="Limite"
+            value={nlLimit}
+            onValueChange={setNlLimit}
+            items={NL_LIMITS.map(limit => ({
+              label: `NL${limit}`,
               value: limit.toString(),
             }))}
           />
+          
+          <View style={styles.infoBox}>
+            <Text style={styles.infoLabel}>Valeur de la BB :</Text>
+            <Text style={styles.infoValue}>{formatCurrency(bbValue)}</Text>
+          </View>
           
           <Select
             label="Nombre de tables"
