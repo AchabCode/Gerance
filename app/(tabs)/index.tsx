@@ -18,6 +18,7 @@ export default function HomeScreen() {
   const [showBankroll, setShowBankroll] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [lastResetTime, setLastResetTime] = useState<Date>(new Date());
 
   useEffect(() => {
     setMotivationalMessage(getRandomMotivationalMessage());
@@ -44,6 +45,7 @@ export default function HomeScreen() {
           style: 'destructive',
           onPress: async () => {
             await addHistoryPoint(totalBankroll);
+            setLastResetTime(new Date());
             setShowMenu(false);
           },
         },
@@ -55,22 +57,27 @@ export default function HomeScreen() {
     const now = new Date();
     let startDate = startOfDay(now);
 
-    switch (period) {
-      case '24h':
-        startDate = subDays(now, 1);
-        break;
-      case 'Semaine':
-        startDate = subWeeks(now, 1);
-        break;
-      case 'Mois':
-        startDate = subMonths(now, 1);
-        break;
-      case 'Trimestre':
-        startDate = subMonths(now, 3);
-        break;
-      case 'Année':
-        startDate = subMonths(now, 12);
-        break;
+    // Utiliser la date de dernière réinitialisation comme point de départ
+    if (isAfter(lastResetTime, startDate)) {
+      startDate = lastResetTime;
+    } else {
+      switch (period) {
+        case '24h':
+          startDate = subDays(now, 1);
+          break;
+        case 'Semaine':
+          startDate = subWeeks(now, 1);
+          break;
+        case 'Mois':
+          startDate = subMonths(now, 1);
+          break;
+        case 'Trimestre':
+          startDate = subMonths(now, 3);
+          break;
+        case 'Année':
+          startDate = subMonths(now, 12);
+          break;
+      }
     }
 
     const filteredHistory = bankrollHistory
