@@ -47,63 +47,69 @@ export default function OnlineSimulatorScreen() {
   const [simulationPeriod, setSimulationPeriod] = useState(SIMULATION_PERIODS[0].value);
 
   useEffect(() => {
-    loadSimulatorConfig();
-  }, []);
+    loadSimulatorData();
+  }, [user]);
 
-  const loadSimulatorConfig = async () => {
+  const loadSimulatorData = async () => {
+    if (!user) return;
+
     try {
       const { data, error } = await supabase
-        .from('simulator_configs')
+        .from('simulator_cashgame_online')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading simulator data:', error);
+        return;
+      }
+
       if (data) {
         setRake(data.rake?.toString() || '');
         setRakeback(data.rakeback?.toString() || '');
         setWinrate(data.winrate?.toString() || '');
         setHoursPerWeek(data.hours_per_week?.toString() || '');
-        setNlLimit(data.nl_limit?.toString() || NL_LIMITS[0].toString());
-        setTableCount(data.table_count?.toString() || '1');
-        setCurrentBankroll(data.current_bankroll?.toString() || totalBankroll.toString());
-        setMonthlyWithdrawal(data.monthly_withdrawal?.toString() || '');
+        setNlLimit(data.limit?.toString() || NL_LIMITS[0].toString());
+        setTableCount(data.tables?.toString() || '1');
+        setCurrentBankroll(data.bankroll?.toString() || totalBankroll.toString());
+        setMonthlyWithdrawal(data.cashout_monthly?.toString() || '');
         setStartDate(new Date(data.start_date || new Date()));
-        setSimulationPeriod(data.simulation_period || SIMULATION_PERIODS[0].value);
+        setSimulationPeriod(data.duration_choice || SIMULATION_PERIODS[0].value);
       }
     } catch (error) {
-      console.error('Error loading simulator config:', error);
+      console.error('Error loading simulator data:', error);
     }
   };
 
-  const saveSimulatorConfig = async () => {
+  const saveSimulatorData = async () => {
     if (!user) return;
-    
+
     try {
       const { error } = await supabase
-        .from('simulator_configs')
+        .from('simulator_cashgame_online')
         .upsert({
           user_id: user.id,
-          rake: parseFloat(rake) || 0,
-          rakeback: parseFloat(rakeback) || 0,
-          winrate: parseFloat(winrate) || 0,
-          hours_per_week: parseFloat(hoursPerWeek) || 0,
-          nl_limit: parseInt(nlLimit),
-          table_count: parseInt(tableCount),
-          current_bankroll: parseFloat(currentBankroll) || 0,
-          monthly_withdrawal: parseFloat(monthlyWithdrawal) || 0,
+          rake: rake ? parseFloat(rake) : null,
+          rakeback: rakeback ? parseFloat(rakeback) : null,
+          winrate: winrate ? parseFloat(winrate) : null,
+          hours_per_week: hoursPerWeek ? parseFloat(hoursPerWeek) : null,
+          limit: nlLimit ? parseInt(nlLimit) : null,
+          tables: tableCount ? parseInt(tableCount) : null,
+          bankroll: currentBankroll ? parseFloat(currentBankroll) : null,
+          cashout_monthly: monthlyWithdrawal ? parseFloat(monthlyWithdrawal) : null,
           start_date: startDate.toISOString(),
-          simulation_period: simulationPeriod,
+          duration_choice: simulationPeriod
         });
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error saving simulator config:', error);
+      console.error('Error saving simulator data:', error);
     }
   };
 
   useEffect(() => {
-    saveSimulatorConfig();
+    saveSimulatorData();
   }, [
     rake,
     rakeback,
@@ -114,20 +120,33 @@ export default function OnlineSimulatorScreen() {
     currentBankroll,
     monthlyWithdrawal,
     startDate,
-    simulationPeriod,
+    simulationPeriod
   ]);
 
-  const resetSimulator = () => {
-    setRake('');
-    setRakeback('');
-    setWinrate('');
-    setHoursPerWeek('');
-    setNlLimit(NL_LIMITS[0].toString());
-    setTableCount('1');
-    setCurrentBankroll(totalBankroll.toString());
-    setMonthlyWithdrawal('');
-    setStartDate(new Date());
-    setSimulationPeriod(SIMULATION_PERIODS[0].value);
+  const resetSimulator = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('simulator_cashgame_online')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setRake('');
+      setRakeback('');
+      setWinrate('');
+      setHoursPerWeek('');
+      setNlLimit(NL_LIMITS[0].toString());
+      setTableCount('1');
+      setCurrentBankroll(totalBankroll.toString());
+      setMonthlyWithdrawal('');
+      setStartDate(new Date());
+      setSimulationPeriod(SIMULATION_PERIODS[0].value);
+    } catch (error) {
+      console.error('Error resetting simulator:', error);
+    }
   };
 
   const handsPerHour = parseInt(tableCount) * 70;
