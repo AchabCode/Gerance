@@ -49,7 +49,8 @@ export default function OnlineSimulatorScreen() {
     const winrateValue = parseFloat(winrate) || 0;
     const bbLimitValue = parseFloat(bbLimit) || 0;
 
-    const bbPerHour = ((winrateValue + (rakeValue * rakebackValue)) * (handsPerHour / 100));
+    // Divide by 100 since rake and winrate are in bb/100
+    const bbPerHour = ((winrateValue + (rakeValue * rakebackValue)) * handsPerHour) / 100;
     return bbPerHour * bbLimitValue;
   };
 
@@ -59,7 +60,8 @@ export default function OnlineSimulatorScreen() {
     const rakebackValue = (parseFloat(rakeback) || 0) / 100;
     const bbLimitValue = parseFloat(bbLimit) || 0;
 
-    const bbRakebackPerHour = rakeValue * rakebackValue * (handsPerHour / 100);
+    // Divide by 100 since rake is in bb/100
+    const bbRakebackPerHour = (rakeValue * rakebackValue * handsPerHour) / 100;
     return bbRakebackPerHour * bbLimitValue;
   };
 
