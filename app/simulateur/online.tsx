@@ -6,7 +6,7 @@ import { Select } from '@/components/Select';
 import { DatePicker } from '@/components/DatePicker';
 import { Button } from '@/components/Button';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, LayoutDashboard } from 'lucide-react-native';
+import { ArrowLeft, LayoutDashboard, RotateCcw } from 'lucide-react-native';
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { calculateTotalBankroll } from '@/utils/calculations';
