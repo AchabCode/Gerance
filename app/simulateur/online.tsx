@@ -169,11 +169,12 @@ export default function OnlineSimulatorScreen() {
     return bbRakebackPerHour * bbValue;
   };
 
-  const calculateNetGains = () => {
+  const calculateMonthlyGains = () => {
     const hourlyRate = calculateHourlyRate();
     const hoursPerWeekValue = parseFloat(hoursPerWeek) || 0;
     const monthlyWithdrawalValue = parseFloat(monthlyWithdrawal) || 0;
 
+    // Calculate number of weeks in the simulation
     let totalWeeks = 0;
     const [value, unit] = simulationPeriod.split('');
     const numValue = parseInt(value);
@@ -183,36 +184,43 @@ export default function OnlineSimulatorScreen() {
         totalWeeks = numValue;
         break;
       case 'm':
-        totalWeeks = numValue * 4.33;
+        totalWeeks = numValue * 4.33; // Average weeks per month
         break;
       case 'y':
         totalWeeks = 52;
         break;
     }
 
+    // Calculate total hours played
     const totalHours = hoursPerWeekValue * totalWeeks;
+    
+    // Calculate gross gains (hourly rate * total hours)
     const grossGains = hourlyRate * totalHours;
 
-    let withdrawalMultiplier = 0;
+    // Calculate number of months for withdrawal
+    let withdrawalMonths = 0;
     switch (simulationPeriod) {
-      case '1w': withdrawalMultiplier = 0.25; break;
-      case '2w': withdrawalMultiplier = 0.5; break;
-      case '3w': withdrawalMultiplier = 0.75; break;
-      case '1m': withdrawalMultiplier = 1; break;
-      case '2m': withdrawalMultiplier = 2; break;
-      case '3m': withdrawalMultiplier = 3; break;
-      case '6m': withdrawalMultiplier = 6; break;
-      case '1y': withdrawalMultiplier = 12; break;
+      case '1w': withdrawalMonths = 0.25; break;
+      case '2w': withdrawalMonths = 0.5; break;
+      case '3w': withdrawalMonths = 0.75; break;
+      case '1m': withdrawalMonths = 1; break;
+      case '2m': withdrawalMonths = 2; break;
+      case '3m': withdrawalMonths = 3; break;
+      case '6m': withdrawalMonths = 6; break;
+      case '1y': withdrawalMonths = 12; break;
     }
 
-    const totalWithdrawal = monthlyWithdrawalValue * withdrawalMultiplier;
+    // Calculate total withdrawal
+    const totalWithdrawal = monthlyWithdrawalValue * withdrawalMonths;
+
+    // Return net gains
     return grossGains - totalWithdrawal;
   };
 
   const hourlyRate = calculateHourlyRate();
   const hourlyRakeback = calculateHourlyRakeback();
-  const netGains = calculateNetGains();
-  const finalBankroll = parseFloat(currentBankroll) + netGains;
+  const monthlyGains = calculateMonthlyGains();
+  const finalBankroll = parseFloat(currentBankroll) + monthlyGains;
 
   const getSimulationEndDate = () => {
     const [value, unit] = simulationPeriod.split('');
@@ -391,8 +399,8 @@ export default function OnlineSimulatorScreen() {
             <Text style={styles.resultLabel}>
               Gains nets sur {SIMULATION_PERIODS.find(p => p.value === simulationPeriod)?.label.toLowerCase()}
             </Text>
-            <Text style={[styles.resultValue, netGains >= 0 ? styles.positive : styles.negative]}>
-              {formatCurrency(netGains)}
+            <Text style={[styles.resultValue, monthlyGains >= 0 ? styles.positive : styles.negative]}>
+              {formatCurrency(monthlyGains)}
             </Text>
           </View>
 
