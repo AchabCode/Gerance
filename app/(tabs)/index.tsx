@@ -3,14 +3,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { BankrollChart } from '@/components/BankrollChart';
 import { getRandomMotivationalMessage } from '@/utils/calculations';
 import { useAppContext } from '@/context/AppContext';
 import { calculateTotalBankroll } from '@/utils/calculations';
 import { Eye, EyeOff } from 'lucide-react-native';
 
 export default function HomeScreen() {
-  const { bankrollItems, bankrollHistory, loading } = useAppContext();
+  const { bankrollItems } = useAppContext();
   const router = useRouter();
   const [motivationalMessage, setMotivationalMessage] = useState('');
   const [showBankroll, setShowBankroll] = useState(false);
@@ -52,8 +51,6 @@ export default function HomeScreen() {
           size="large"
         />
       </Card>
-
-      <BankrollChart data={bankrollHistory} />
 
       <Card style={styles.motivationCard}>
         <Text style={styles.motivationLabel}>Motivation du jour</Text>
