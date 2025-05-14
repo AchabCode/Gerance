@@ -10,6 +10,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
   const router = useRouter();
 
   const handleLogin = async () => {
@@ -32,6 +33,30 @@ export default function LoginScreen() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (!email) {
+        setError('Veuillez entrer votre email');
+        return;
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      setResetSent(true);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -40,6 +65,11 @@ export default function LoginScreen() {
       </View>
 
       {error && <Text style={styles.error}>{error}</Text>}
+      {resetSent && (
+        <Text style={styles.success}>
+          Un email de réinitialisation a été envoyé à {email}
+        </Text>
+      )}
 
       <Input
         label="Email"
@@ -57,6 +87,10 @@ export default function LoginScreen() {
         placeholder="Votre mot de passe"
         secureTextEntry
       />
+
+      <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
+        <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
+      </TouchableOpacity>
 
       <Button
         title="Se connecter"
@@ -101,6 +135,10 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     marginBottom: 16,
   },
+  success: {
+    color: '#10b981',
+    marginBottom: 16,
+  },
   button: {
     marginTop: 24,
   },
@@ -116,5 +154,13 @@ const styles = StyleSheet.create({
   link: {
     color: '#3B82F6',
     fontWeight: '500',
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
+  },
+  forgotPasswordText: {
+    color: '#64748b',
+    fontSize: 14,
   },
 });
