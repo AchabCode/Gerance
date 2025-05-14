@@ -24,6 +24,12 @@ export default function HomeScreen() {
     setMotivationalMessage(getRandomMotivationalMessage());
   }, []);
 
+  // Update history point when bankroll changes
+  useEffect(() => {
+    const totalBankroll = calculateTotalBankroll(bankrollItems);
+    addHistoryPoint(totalBankroll);
+  }, [bankrollItems]);
+
   const totalBankroll = calculateTotalBankroll(bankrollItems);
 
   const toggleBankrollVisibility = () => {
