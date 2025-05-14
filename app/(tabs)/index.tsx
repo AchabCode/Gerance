@@ -15,7 +15,7 @@ export default function HomeScreen() {
   const { bankrollItems, bankrollHistory } = useAppContext();
   const router = useRouter();
   const [motivationalMessage, setMotivationalMessage] = useState('');
-  const [showBankroll, setShowBankroll] = useState(false);
+  const [showBankroll, setShowBankroll] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod | null>(null);
 
   useEffect(() => {
