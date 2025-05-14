@@ -56,6 +56,8 @@ export default function OnlineSimulatorScreen() {
   const loadSimulatorData = async () => {
     if (!user) return;
 
+    console.log('Loading simulator data for user:', user.id);
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -68,6 +70,8 @@ export default function OnlineSimulatorScreen() {
         console.error('Error loading simulator data:', error);
         return;
       }
+
+      console.log('Loaded simulator data:', data);
 
       if (data) {
         setRake(data.rake?.toString() || '');
@@ -89,28 +93,39 @@ export default function OnlineSimulatorScreen() {
   };
 
   const saveSimulatorData = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found, cannot save');
+      return;
+    }
+
+    const dataToSave = {
+      user_id: user.id,
+      rake: rake ? parseFloat(rake) : null,
+      rakeback: rakeback ? parseFloat(rakeback) : null,
+      winrate: winrate ? parseFloat(winrate) : null,
+      hours_per_week: hoursPerWeek ? parseFloat(hoursPerWeek) : null,
+      limit: nlLimit ? parseInt(nlLimit) : null,
+      tables: tableCount ? parseInt(tableCount) : null,
+      bankroll: currentBankroll ? parseFloat(currentBankroll) : null,
+      cashout_monthly: monthlyWithdrawal ? parseFloat(monthlyWithdrawal) : null,
+      start_date: startDate.toISOString(),
+      duration_choice: simulationPeriod
+    };
+
+    console.log('Saving simulator data:', dataToSave);
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('simulator_cashgame_online')
-        .upsert({
-          user_id: user.id,
-          rake: rake ? parseFloat(rake) : null,
-          rakeback: rakeback ? parseFloat(rakeback) : null,
-          winrate: winrate ? parseFloat(winrate) : null,
-          hours_per_week: hoursPerWeek ? parseFloat(hoursPerWeek) : null,
-          limit: nlLimit ? parseInt(nlLimit) : null,
-          tables: tableCount ? parseInt(tableCount) : null,
-          bankroll: currentBankroll ? parseFloat(currentBankroll) : null,
-          cashout_monthly: monthlyWithdrawal ? parseFloat(monthlyWithdrawal) : null,
-          start_date: startDate.toISOString(),
-          duration_choice: simulationPeriod
-        });
+        .upsert(dataToSave)
+        .select();
 
       if (error) {
         console.error('Error saving simulator data:', error);
+        return;
       }
+
+      console.log('Successfully saved simulator data:', data);
     } catch (error) {
       console.error('Error saving simulator data:', error);
     }
