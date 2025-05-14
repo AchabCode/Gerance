@@ -7,7 +7,7 @@ import { LogOut, Key, User, ArrowLeft } from 'lucide-react-native';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
 
   const handleSignOut = () => {
     Alert.alert(
@@ -29,11 +29,6 @@ export default function SettingsScreen() {
     Alert.alert('À venir', 'Cette fonctionnalité sera bientôt disponible');
   };
 
-  const handleAccountSettings = () => {
-    // To be implemented
-    Alert.alert('À venir', 'Cette fonctionnalité sera bientôt disponible');
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -49,10 +44,10 @@ export default function SettingsScreen() {
       <Card>
         <Text style={styles.sectionTitle}>Compte</Text>
         
-        <TouchableOpacity style={styles.option} onPress={handleAccountSettings}>
+        <View style={styles.emailContainer}>
           <User size={20} color="#64748b" />
-          <Text style={styles.optionText}>Informations du compte</Text>
-        </TouchableOpacity>
+          <Text style={styles.email}>{user?.email}</Text>
+        </View>
 
         <TouchableOpacity style={styles.option} onPress={handleChangePassword}>
           <Key size={20} color="#64748b" />
@@ -94,6 +89,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#0f172a',
     marginBottom: 16,
+  },
+  emailContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  email: {
+    fontSize: 16,
+    color: '#64748b',
+    marginLeft: 12,
   },
   option: {
     flexDirection: 'row',

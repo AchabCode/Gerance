@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar'
 import { useFrameworkReady } from '@/hooks/useFrameworkReady'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { AppProvider } from '@/context/AppContext'
-import { View, StyleSheet } from 'react-native'
 
 const Protected: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, loading } = useAuth()
