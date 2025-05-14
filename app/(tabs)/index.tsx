@@ -6,7 +6,7 @@ import { Button } from '@/components/Button';
 import { getRandomMotivationalMessage } from '@/utils/calculations';
 import { useAppContext } from '@/context/AppContext';
 import { calculateTotalBankroll } from '@/utils/calculations';
-import { Eye, EyeOff, MoreVertical } from 'lucide-react-native';
+import { Eye, EyeOff, MoveVertical as MoreVertical } from 'lucide-react-native';
 import { subDays, subMonths, subWeeks, startOfDay, isAfter } from 'date-fns';
 
 type TimePeriod = '24h' | 'Semaine' | 'Mois' | 'Trimestre' | 'Année';
