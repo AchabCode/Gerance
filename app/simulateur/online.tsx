@@ -174,7 +174,6 @@ export default function OnlineSimulatorScreen() {
     const hoursPerWeekValue = parseFloat(hoursPerWeek) || 0;
     const monthlyWithdrawalValue = parseFloat(monthlyWithdrawal) || 0;
 
-    // Calculate number of weeks in the simulation
     let totalWeeks = 0;
     const [value, unit] = simulationPeriod.split('');
     const numValue = parseInt(value);
@@ -184,20 +183,16 @@ export default function OnlineSimulatorScreen() {
         totalWeeks = numValue;
         break;
       case 'm':
-        totalWeeks = numValue * 4.33; // Average weeks per month
+        totalWeeks = numValue * 4.33;
         break;
       case 'y':
         totalWeeks = 52;
         break;
     }
 
-    // Calculate total hours played
     const totalHours = hoursPerWeekValue * totalWeeks;
-    
-    // Calculate gross gains (hourly rate * total hours)
     const grossGains = hourlyRate * totalHours;
 
-    // Calculate number of months for withdrawal
     let withdrawalMonths = 0;
     switch (simulationPeriod) {
       case '1w': withdrawalMonths = 0.25; break;
@@ -210,10 +205,8 @@ export default function OnlineSimulatorScreen() {
       case '1y': withdrawalMonths = 12; break;
     }
 
-    // Calculate total withdrawal
     const totalWithdrawal = monthlyWithdrawalValue * withdrawalMonths;
 
-    // Return net gains
     return grossGains - totalWithdrawal;
   };
 
