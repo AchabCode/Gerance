@@ -17,19 +17,27 @@ export default function SettingsScreen() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSignOut = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Se déconnecter', 
-          style: 'destructive',
-          onPress: () => signOut()
-        },
-      ]
-    );
+  const handleSignOut = async () => {
+    try {
+      Alert.alert(
+        'Déconnexion',
+        'Êtes-vous sûr de vouloir vous déconnecter ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { 
+            text: 'Se déconnecter', 
+            style: 'destructive',
+            onPress: async () => {
+              await signOut();
+              router.replace('/login');
+            }
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Error signing out:', error);
+      Alert.alert('Erreur', 'Une erreur est survenue lors de la déconnexion');
+    }
   };
 
   const handleChangePassword = async () => {
