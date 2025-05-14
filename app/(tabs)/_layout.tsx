@@ -1,7 +1,11 @@
 import { Tabs } from 'expo-router';
-import { LayoutDashboard, ChartBar, Calculator } from 'lucide-react-native';
+import { LayoutDashboard, ChartBar, Calculator, Settings } from 'lucide-react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function TabLayout() {
+  const router = useRouter();
+
   return (
     <Tabs
       screenOptions={{
@@ -34,6 +38,14 @@ export default function TabLayout() {
           color: '#0f172a',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
         },
+        headerRight: () => (
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={() => router.push('/settings')}
+          >
+            <Settings size={24} color="#64748b" />
+          </TouchableOpacity>
+        ),
       }}>
       <Tabs.Screen
         name="index"
@@ -59,3 +71,10 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  settingsButton: {
+    marginRight: 16,
+    padding: 4,
+  },
+});
