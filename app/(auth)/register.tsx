@@ -33,7 +33,7 @@ export default function RegisterScreen() {
 
       // Check if username exists
       const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
+        .from('users')
         .select('username')
         .eq('username', username)
         .single();
@@ -57,7 +57,7 @@ export default function RegisterScreen() {
       // Update profile with username
       if (user) {
         const { error: updateError } = await supabase
-          .from('profiles')
+          .from('users')
           .update({ username })
           .eq('id', user.id);
 

@@ -43,7 +43,7 @@ export default function HomeScreen() {
   const loadProfile = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('username')
         .eq('id', user?.id)
         .single();

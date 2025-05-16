@@ -27,7 +27,7 @@ export default function SettingsScreen() {
   const loadProfile = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('username')
         .eq('id', user?.id)
         .single();
@@ -111,7 +111,7 @@ export default function SettingsScreen() {
 
       // Check if username exists
       const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
+        .from('users')
         .select('username')
         .eq('username', username)
         .neq('id', user?.id)
@@ -126,7 +126,7 @@ export default function SettingsScreen() {
       }
 
       const { error: updateError } = await supabase
-        .from('profiles')
+        .from('users')
         .update({ username })
         .eq('id', user?.id);
 
