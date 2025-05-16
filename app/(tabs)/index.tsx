@@ -26,8 +26,19 @@ export default function HomeScreen() {
     setMotivationalMessage(getRandomMotivationalMessage());
     if (user) {
       loadProfile();
+      testUsersTable();
     }
   }, [user]);
+
+  const testUsersTable = async () => {
+    try {
+      const { data, error } = await supabase.from("users").select("*");
+      console.log("DATA", data);
+      console.log("ERROR", error);
+    } catch (err) {
+      console.error("Test error:", err);
+    }
+  };
 
   const loadProfile = async () => {
     try {
