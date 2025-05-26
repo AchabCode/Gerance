@@ -1,42 +1,152 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Card } from '@/components/Card';
 import { Input } from '@/components/Input';
 import { useAppContext } from '@/context/AppContext';
 import { calculateHourlyRate } from '@/utils/calculations';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, LayoutDashboard } from 'lucide-react-native';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/Button';
 
 export default function LiveSimulatorScreen() {
   const router = useRouter();
-  const { hourlyRateParams, updateHourlyRateParams } = useAppContext();
+  const { user } = useAuth();
   
-  const [bb_amount, setBbAmount] = useState(hourlyRateParams.bb_amount.toString());
-  const [bb_per_hour, setBbPerHour] = useState(hourlyRateParams.bb_per_hour.toString());
-  const [rakeback_hourly, setRakebackHourly] = useState(hourlyRateParams.rakeback_hourly.toString());
-  const [monthly_hours, setMonthlyHours] = useState(hourlyRateParams.monthly_hours.toString());
-  const [monthly_expenses, setMonthlyExpenses] = useState(hourlyRateParams.monthly_expenses.toString());
+  const [amount_of_bb, setAmountOfBb] = useState('');
+  const [bb_won, setBbWon] = useState('');
+  const [rb_percent, setRbPercent] = useState('');
+  const [month_hours, setMonthHours] = useState('');
+  const [mensual_fees, setMensualFees] = useState('');
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    setBbAmount(hourlyRateParams.bb_amount.toString());
-    setBbPerHour(hourlyRateParams.bb_per_hour.toString());
-    setRakebackHourly(hourlyRateParams.rakeback_hourly.toString());
-    setMonthlyHours(hourlyRateParams.monthly_hours.toString());
-    setMonthlyExpenses(hourlyRateParams.monthly_expenses.toString());
-  }, [hourlyRateParams]);
+    if (user) {
+      loadSimulatorData();
+    }
+  }, [user?.id]);
 
-  const handleParamUpdate = (params: typeof hourlyRateParams) => {
-    updateHourlyRateParams(params);
+  const loadSimulatorData = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('simulator_cashgame_live')
+        .select('*')
+        .eq('user_id', user?.id);
+
+      if (error) {
+        console.error('Error loading simulator data:', error);
+        Alert.alert('Erreur', 'Impossible de charger vos données');
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const savedData = data[0];
+        setAmountOfBb(savedData.amount_of_bb?.toString() || '');
+        setBbWon(savedData.bb_won?.toString() || '');
+        setRbPercent(savedData.rb_percent?.toString() || '');
+        setMonthHours(savedData.month_hours?.toString() || '');
+        setMensualFees(savedData.mensual_fees?.toString() || '');
+      }
+    } catch (error) {
+      console.error('Error loading simulator data:', error);
+      Alert.alert('Erreur', 'Impossible de charger vos données');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) {
+      console.log('No user found, cannot save');
+      return;
+    }
+
+    try {
+      const { data: existingData, error: checkError } = await supabase
+        .from('simulator_cashgame_live')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (checkError) {
+        console.error('Error checking existing data:', checkError);
+        Alert.alert('Erreur', 'Impossible de vérifier les données existantes');
+        return;
+      }
+
+      const dataToSave = {
+        user_id: user.id,
+        amount_of_bb: amount_of_bb ? parseInt(amount_of_bb) : null,
+        bb_won: bb_won ? parseInt(bb_won) : null,
+        rb_percent: rb_percent ? parseInt(rb_percent) : null,
+        month_hours: month_hours ? parseInt(month_hours) : null,
+        mensual_fees: mensual_fees ? parseInt(mensual_fees) : null,
+      };
+
+      let result;
+      if (existingData && existingData.length > 0) {
+        result = await supabase
+          .from('simulator_cashgame_live')
+          .update(dataToSave)
+          .eq('user_id', user.id)
+          .select();
+      } else {
+        result = await supabase
+          .from('simulator_cashgame_live')
+          .insert(dataToSave)
+          .select();
+      }
+
+      if (result.error) {
+        console.error('Error saving simulator data:', result.error);
+        Alert.alert('Erreur', 'Impossible de sauvegarder vos données');
+        return;
+      }
+
+      Alert.alert('Succès', 'Configuration sauvegardée');
+    } catch (error) {
+      console.error('Error saving simulator data:', error);
+      Alert.alert('Erreur', 'Impossible de sauvegarder vos données');
+    }
+  };
+
+  const handleReset = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('simulator_cashgame_live')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error resetting simulator:', error);
+        Alert.alert('Erreur', 'Impossible de réinitialiser la configuration');
+        return;
+      }
+
+      setAmountOfBb('');
+      setBbWon('');
+      setRbPercent('');
+      setMonthHours('');
+      setMensualFees('');
+
+      Alert.alert('Succès', 'Configuration réinitialisée');
+    } catch (error) {
+      console.error('Error resetting simulator:', error);
+      Alert.alert('Erreur', 'Impossible de réinitialiser la configuration');
+    }
   };
   
   const hourlyRate = calculateHourlyRate(
-    Number(bb_amount) || 0,
-    Number(bb_per_hour) || 0,
-    Number(rakeback_hourly) || 0
+    Number(amount_of_bb) || 0,
+    Number(bb_won) || 0,
+    Number(rb_percent) || 0
   );
 
-  const monthlyEarnings = hourlyRate * (Number(monthly_hours) || 0);
-  const monthlyNetEarnings = monthlyEarnings - (Number(monthly_expenses) || 0);
+  const monthlyEarnings = hourlyRate * (Number(month_hours) || 0);
+  const monthlyNetEarnings = monthlyEarnings - (Number(mensual_fees) || 0);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -63,70 +173,40 @@ export default function LiveSimulatorScreen() {
         
         <Input
           label="Montant de la BB jouée ($)"
-          value={bb_amount}
-          onChangeText={(text) => {
-            setBbAmount(text);
-            handleParamUpdate({
-              ...hourlyRateParams,
-              bb_amount: Number(text) || 0,
-            });
-          }}
+          value={amount_of_bb}
+          onChangeText={setAmountOfBb}
           keyboardType="decimal-pad"
           placeholder="Entrez le montant de la BB"
         />
         
         <Input
           label="BB gagnées par heure"
-          value={bb_per_hour}
-          onChangeText={(text) => {
-            setBbPerHour(text);
-            handleParamUpdate({
-              ...hourlyRateParams,
-              bb_per_hour: Number(text) || 0,
-            });
-          }}
+          value={bb_won}
+          onChangeText={setBbWon}
           keyboardType="decimal-pad"
           placeholder="Entrez le nombre de BB/heure"
         />
         
         <Input
-          label="Rakeback $/heure"
-          value={rakeback_hourly}
-          onChangeText={(text) => {
-            setRakebackHourly(text);
-            handleParamUpdate({
-              ...hourlyRateParams,
-              rakeback_hourly: Number(text) || 0,
-            });
-          }}
+          label="Rakeback (%)"
+          value={rb_percent}
+          onChangeText={setRbPercent}
           keyboardType="decimal-pad"
-          placeholder="Entrez le rakeback horaire"
+          placeholder="Entrez le pourcentage de rakeback"
         />
         
         <Input
           label="Nombre d'heures jouées dans le mois"
-          value={monthly_hours}
-          onChangeText={(text) => {
-            setMonthlyHours(text);
-            handleParamUpdate({
-              ...hourlyRateParams,
-              monthly_hours: Number(text) || 0,
-            });
-          }}
+          value={month_hours}
+          onChangeText={setMonthHours}
           keyboardType="decimal-pad"
           placeholder="Entrez le nombre d'heures par mois"
         />
 
         <Input
           label="Frais mensuels ($)"
-          value={monthly_expenses}
-          onChangeText={(text) => {
-            setMonthlyExpenses(text);
-            handleParamUpdate({
-              ...hourlyRateParams,
-              monthly_expenses: Number(text) || 0,
-            });
-          }}
+          value={mensual_fees}
+          onChangeText={setMensualFees}
           keyboardType="decimal-pad"
           placeholder="Entrez vos frais mensuels"
         />
@@ -149,6 +229,20 @@ export default function LiveSimulatorScreen() {
             </Text>
           </View>
         </View>
+
+        <Button
+          title="💾 Sauvegarder"
+          onPress={handleSave}
+          variant="primary"
+          style={styles.saveButton}
+        />
+
+        <Button
+          title="🔄 Réinitialiser"
+          onPress={handleReset}
+          variant="secondary"
+          style={styles.resetButton}
+        />
       </Card>
     </ScrollView>
   );
@@ -208,5 +302,11 @@ const styles = StyleSheet.create({
   },
   negativeValue: {
     color: '#ef4444',
+  },
+  saveButton: {
+    marginBottom: 12,
+  },
+  resetButton: {
+    marginTop: 0,
   },
 });
