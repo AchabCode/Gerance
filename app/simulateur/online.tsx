@@ -96,62 +96,6 @@ export default function OnlineSimulatorScreen() {
     }
   };
 
-  const saveSimulatorData = async () => {
-    if (!user) {
-      console.log('No user found, cannot save');
-      return;
-    }
-
-    const dataToSave = {
-      user_id: user.id,
-      rake: rake ? parseFloat(rake) : null,
-      rakeback: rakeback ? parseFloat(rakeback) : null,
-      winrate: winrate ? parseFloat(winrate) : null,
-      hours_per_week: hoursPerWeek ? parseFloat(hoursPerWeek) : null,
-      limit: nlLimit ? parseInt(nlLimit) : null,
-      tables: tableCount ? parseInt(tableCount) : null,
-      bankroll: currentBankroll ? parseFloat(currentBankroll) : null,
-      cashout_monthly: monthlyWithdrawal ? parseFloat(monthlyWithdrawal) : null,
-      start_date: startDate.toISOString(),
-      duration_choice: simulationPeriod
-    };
-
-    console.log('Saving simulator data:', dataToSave);
-
-    try {
-      const { data, error } = await supabase
-        .from('simulator_cashgame_online')
-        .upsert(dataToSave)
-        .select();
-
-      if (error) {
-        console.error('Error saving simulator data:', error);
-        return;
-      }
-
-      console.log('Successfully saved simulator data:', data);
-    } catch (error) {
-      console.error('Error saving simulator data:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (!loading) {
-      saveSimulatorData();
-    }
-  }, [
-    rake,
-    rakeback,
-    winrate,
-    hoursPerWeek,
-    nlLimit,
-    tableCount,
-    currentBankroll,
-    monthlyWithdrawal,
-    startDate.toISOString(),
-    simulationPeriod
-  ]);
-
   const resetSimulator = async () => {
     if (!user) return;
 
@@ -176,8 +120,11 @@ export default function OnlineSimulatorScreen() {
       setMonthlyWithdrawal('');
       setStartDate(new Date());
       setSimulationPeriod(SIMULATION_PERIODS[0].value);
+      
+      Alert.alert('Succès', 'Configuration réinitialisée');
     } catch (error) {
       console.error('Error resetting simulator:', error);
+      Alert.alert('Erreur', 'Impossible de réinitialiser la configuration');
     }
   };
 
