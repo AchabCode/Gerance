@@ -65,8 +65,7 @@ export default function OnlineSimulatorScreen() {
       const { data, error } = await supabase
         .from('simulator_cashgame_online')
         .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Error loading simulator data:', error);
@@ -76,17 +75,18 @@ export default function OnlineSimulatorScreen() {
 
       console.log('Loaded simulator data:', data);
 
-      if (data) {
-        setRake(data.rake?.toString() || '');
-        setRakeback(data.rakeback?.toString() || '');
-        setWinrate(data.winrate?.toString() || '');
-        setHoursPerWeek(data.hours_per_week?.toString() || '');
-        setNlLimit(data.limit?.toString() || NL_LIMITS[0].toString());
-        setTableCount(data.tables?.toString() || '1');
-        setCurrentBankroll(data.bankroll?.toString() || totalBankroll.toString());
-        setMonthlyWithdrawal(data.cashout_monthly?.toString() || '');
-        setStartDate(new Date(data.start_date || new Date()));
-        setSimulationPeriod(data.duration_choice || SIMULATION_PERIODS[0].value);
+      if (data && data.length > 0) {
+        const savedData = data[0];
+        setRake(savedData.rake?.toString() || '');
+        setRakeback(savedData.rakeback?.toString() || '');
+        setWinrate(savedData.winrate?.toString() || '');
+        setHoursPerWeek(savedData.hours_per_week?.toString() || '');
+        setNlLimit(savedData.limit?.toString() || NL_LIMITS[0].toString());
+        setTableCount(savedData.tables?.toString() || '1');
+        setCurrentBankroll(savedData.bankroll?.toString() || totalBankroll.toString());
+        setMonthlyWithdrawal(savedData.cashout_monthly?.toString() || '');
+        setStartDate(new Date(savedData.start_date || new Date()));
+        setSimulationPeriod(savedData.duration_choice || SIMULATION_PERIODS[0].value);
       }
     } catch (error) {
       console.error('Error loading simulator data:', error);
@@ -226,6 +226,18 @@ export default function OnlineSimulatorScreen() {
     }
 
     try {
+      // First, check if a record exists for this user
+      const { data: existingData, error: checkError } = await supabase
+        .from('simulator_cashgame_online')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (checkError) {
+        console.error('Error checking existing data:', checkError);
+        Alert.alert('Erreur', 'Impossible de vérifier les données existantes');
+        return;
+      }
+
       const dataToSave = {
         user_id: user.id,
         rake: rake ? parseFloat(rake) : null,
@@ -240,20 +252,28 @@ export default function OnlineSimulatorScreen() {
         duration_choice: simulationPeriod
       };
 
-      console.log('Saving simulator data:', dataToSave);
+      let result;
+      if (existingData && existingData.length > 0) {
+        // Update existing record
+        result = await supabase
+          .from('simulator_cashgame_online')
+          .update(dataToSave)
+          .eq('user_id', user.id)
+          .select();
+      } else {
+        // Insert new record
+        result = await supabase
+          .from('simulator_cashgame_online')
+          .insert(dataToSave)
+          .select();
+      }
 
-      const { data, error } = await supabase
-        .from('simulator_cashgame_online')
-        .upsert(dataToSave)
-        .select();
-
-      if (error) {
-        console.error('Error saving simulator data:', error);
+      if (result.error) {
+        console.error('Error saving simulator data:', result.error);
         Alert.alert('Erreur', 'Impossible de sauvegarder vos données');
         return;
       }
 
-      console.log('Successfully saved simulator data:', data);
       Alert.alert('Succès', 'Configuration sauvegardée');
     } catch (error) {
       console.error('Error saving simulator data:', error);
