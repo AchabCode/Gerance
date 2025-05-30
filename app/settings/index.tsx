@@ -50,7 +50,9 @@ export default function SettingsScreen() {
             text: 'Se déconnecter', 
             style: 'destructive',
             onPress: async () => {
-              await signOut();
+              setLoading(true);
+              const { error } = await supabase.auth.signOut();
+              if (error) throw error;
               router.replace('/login');
             }
           },
@@ -59,6 +61,8 @@ export default function SettingsScreen() {
     } catch (error) {
       console.error('Error signing out:', error);
       Alert.alert('Erreur', 'Une erreur est survenue lors de la déconnexion');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -228,9 +232,12 @@ export default function SettingsScreen() {
         <TouchableOpacity 
           style={[styles.option, styles.logoutOption]} 
           onPress={handleSignOut}
+          disabled={loading}
         >
           <LogOut size={20} color="#ef4444" />
-          <Text style={[styles.optionText, styles.logoutText]}>Se déconnecter</Text>
+          <Text style={[styles.optionText, styles.logoutText]}>
+            {loading ? 'Déconnexion...' : 'Se déconnecter'}
+          </Text>
         </TouchableOpacity>
       </Card>
     </View>
