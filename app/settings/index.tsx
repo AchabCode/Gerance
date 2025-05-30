@@ -51,7 +51,7 @@ export default function SettingsScreen() {
             style: 'destructive',
             onPress: async () => {
               setLoading(true);
-              const { error } = await supabase.auth.signOut();
+              const { error } = await supabase.auth.signOut({ scope: 'local' });
               if (error) throw error;
               router.replace('/login');
             }
